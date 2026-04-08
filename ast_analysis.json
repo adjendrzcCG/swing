@@ -1,0 +1,1526 @@
+{
+  "ast_version": "1.0",
+  "generated_at": "2025-01-01T00:00:00Z",
+  "generator": "ast-analyzer",
+  "note": "Target path was docs/analysis/ast_analysis.json — placed at repository root because docs/ directory did not exist at generation time.",
+  "project": {
+    "name": "Allegro PoC — Swing + WebSocket + Vue.js",
+    "description": "A multi-tier modernization proof-of-concept combining a Java Swing desktop application (MVP pattern), a Node.js WebSocket broadcast server, and a Vue.js web client.",
+    "root": "/home/runner/work/swing/swing/websocket_swing"
+  },
+  "modules": [
+    {
+      "module_id": "java_swing_app",
+      "language": "java",
+      "build_tool": "maven",
+      "base_package": "com",
+      "source_root": "websocket_swing/swing/src/main/java",
+      "files": [
+        {
+          "file_path": "websocket_swing/swing/src/main/java/com/Main.java",
+          "language": "java",
+          "package_name": "com",
+          "imports": [
+            "com.poc.model.EventEmitter",
+            "com.poc.model.PocModel",
+            "com.poc.presentation.PocPresenter",
+            "com.poc.presentation.PocView",
+            "java.util.concurrent.CountDownLatch"
+          ],
+          "type_declarations": [
+            {
+              "type": "ClassDeclaration",
+              "name": "Main",
+              "modifiers": ["public"],
+              "annotations": [],
+              "extends": null,
+              "implements": [],
+              "fields": [],
+              "constructors": [],
+              "methods": [
+                {
+                  "name": "main",
+                  "modifiers": ["public", "static"],
+                  "return_type": "void",
+                  "parameters": [
+                    { "name": "args", "type": "String[]" }
+                  ],
+                  "throws": ["InterruptedException"],
+                  "annotations": [],
+                  "body": [
+                    {
+                      "type": "VariableDeclaration",
+                      "name": "latch",
+                      "variable_type": "CountDownLatch",
+                      "inferred": true,
+                      "value": {
+                        "type": "ObjectCreation",
+                        "class": "CountDownLatch",
+                        "arguments": [
+                          { "type": "Literal", "value": "1", "literal_type": "int" }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "VariableDeclaration",
+                      "name": "pocView",
+                      "variable_type": "PocView",
+                      "inferred": true,
+                      "value": {
+                        "type": "ObjectCreation",
+                        "class": "PocView",
+                        "arguments": []
+                      }
+                    },
+                    {
+                      "type": "VariableDeclaration",
+                      "name": "eventEmitter",
+                      "variable_type": "EventEmitter",
+                      "inferred": true,
+                      "value": {
+                        "type": "ObjectCreation",
+                        "class": "EventEmitter",
+                        "arguments": []
+                      }
+                    },
+                    {
+                      "type": "VariableDeclaration",
+                      "name": "pocModel",
+                      "variable_type": "PocModel",
+                      "inferred": true,
+                      "value": {
+                        "type": "ObjectCreation",
+                        "class": "PocModel",
+                        "arguments": [
+                          { "type": "VariableReference", "name": "eventEmitter" }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "VariableDeclaration",
+                      "name": "_",
+                      "variable_type": "PocPresenter",
+                      "inferred": true,
+                      "note": "Unnamed variable — side-effect wiring only; PocPresenter constructor wires all listeners",
+                      "value": {
+                        "type": "ObjectCreation",
+                        "class": "PocPresenter",
+                        "arguments": [
+                          { "type": "VariableReference", "name": "pocView" },
+                          { "type": "VariableReference", "name": "pocModel" },
+                          { "type": "VariableReference", "name": "eventEmitter" }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "MethodInvocation",
+                      "target": "latch",
+                      "method_name": "await",
+                      "arguments": [],
+                      "note": "Keeps JVM alive indefinitely — the Swing EDT owns the UI thread"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "file_path": "websocket_swing/swing/src/main/java/com/poc/ValueModel.java",
+          "language": "java",
+          "package_name": "com.poc",
+          "imports": [],
+          "type_declarations": [
+            {
+              "type": "ClassDeclaration",
+              "name": "ValueModel",
+              "modifiers": ["public"],
+              "type_parameters": [
+                { "name": "T", "bounds": [] }
+              ],
+              "annotations": [],
+              "extends": null,
+              "implements": [],
+              "design_pattern": "Generic Value Holder (POJO wrapper)",
+              "fields": [
+                {
+                  "name": "field",
+                  "field_type": "T",
+                  "modifiers": ["private"],
+                  "annotations": [],
+                  "initial_value": null
+                }
+              ],
+              "constructors": [
+                {
+                  "name": "ValueModel",
+                  "modifiers": ["public"],
+                  "parameters": [
+                    { "name": "field", "type": "T" }
+                  ],
+                  "body": [
+                    {
+                      "type": "Assignment",
+                      "target": "this.field",
+                      "value": { "type": "VariableReference", "name": "field" }
+                    }
+                  ]
+                }
+              ],
+              "methods": [
+                {
+                  "name": "getField",
+                  "modifiers": ["public"],
+                  "return_type": "T",
+                  "parameters": [],
+                  "throws": [],
+                  "annotations": [],
+                  "body": [
+                    {
+                      "type": "ReturnStatement",
+                      "value": { "type": "VariableReference", "name": "field" }
+                    }
+                  ]
+                },
+                {
+                  "name": "setField",
+                  "modifiers": ["public"],
+                  "return_type": "void",
+                  "parameters": [
+                    { "name": "field", "type": "T" }
+                  ],
+                  "throws": [],
+                  "annotations": [],
+                  "body": [
+                    {
+                      "type": "Assignment",
+                      "target": "this.field",
+                      "value": { "type": "VariableReference", "name": "field" }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "file_path": "websocket_swing/swing/src/main/java/com/poc/model/EventEmitter.java",
+          "language": "java",
+          "package_name": "com.poc.model",
+          "imports": [
+            "java.util.ArrayList",
+            "java.util.List"
+          ],
+          "type_declarations": [
+            {
+              "type": "ClassDeclaration",
+              "name": "EventEmitter",
+              "modifiers": ["public"],
+              "annotations": [],
+              "extends": null,
+              "implements": [],
+              "design_pattern": "Observer / Event Bus",
+              "fields": [
+                {
+                  "name": "listeners",
+                  "field_type": "List<EventListener>",
+                  "modifiers": ["private", "final"],
+                  "annotations": [],
+                  "initial_value": {
+                    "type": "ObjectCreation",
+                    "class": "ArrayList",
+                    "type_arguments": ["EventListener"],
+                    "arguments": []
+                  }
+                }
+              ],
+              "constructors": [],
+              "methods": [
+                {
+                  "name": "subscribe",
+                  "modifiers": ["public"],
+                  "return_type": "void",
+                  "parameters": [
+                    { "name": "listener", "type": "EventListener" }
+                  ],
+                  "throws": [],
+                  "annotations": [],
+                  "body": [
+                    {
+                      "type": "MethodInvocation",
+                      "target": "listeners",
+                      "method_name": "add",
+                      "arguments": [
+                        { "type": "VariableReference", "name": "listener" }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "emit",
+                  "modifiers": ["public"],
+                  "return_type": "void",
+                  "parameters": [
+                    { "name": "eventData", "type": "String" }
+                  ],
+                  "throws": [],
+                  "annotations": [],
+                  "body": [
+                    {
+                      "type": "ForEachStatement",
+                      "variable": { "name": "listener", "type": "EventListener" },
+                      "iterable": { "type": "VariableReference", "name": "listeners" },
+                      "body": [
+                        {
+                          "type": "MethodInvocation",
+                          "target": "listener",
+                          "method_name": "onEvent",
+                          "arguments": [
+                            { "type": "VariableReference", "name": "eventData" }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "file_path": "websocket_swing/swing/src/main/java/com/poc/model/EventListener.java",
+          "language": "java",
+          "package_name": "com.poc.model",
+          "imports": [],
+          "type_declarations": [
+            {
+              "type": "InterfaceDeclaration",
+              "name": "EventListener",
+              "modifiers": ["public"],
+              "annotations": [],
+              "extends": [],
+              "design_pattern": "Observer (functional interface — can be a lambda)",
+              "methods": [
+                {
+                  "name": "onEvent",
+                  "modifiers": [],
+                  "return_type": "void",
+                  "parameters": [
+                    { "name": "eventData", "type": "String" }
+                  ],
+                  "body": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "file_path": "websocket_swing/swing/src/main/java/com/poc/model/HttpBinService.java",
+          "language": "java",
+          "package_name": "com.poc.model",
+          "imports": [
+            "javax.json.Json",
+            "java.io.IOException",
+            "java.net.HttpURLConnection",
+            "java.util.Map",
+            "java.util.Scanner"
+          ],
+          "type_declarations": [
+            {
+              "type": "ClassDeclaration",
+              "name": "HttpBinService",
+              "modifiers": ["public"],
+              "annotations": [],
+              "extends": null,
+              "implements": [],
+              "design_pattern": "Service / HTTP Client",
+              "fields": [
+                {
+                  "name": "URL",
+                  "field_type": "String",
+                  "modifiers": ["public", "static", "final"],
+                  "annotations": [],
+                  "initial_value": { "type": "Literal", "value": "http://localhost:8080", "literal_type": "String" }
+                },
+                {
+                  "name": "PATH",
+                  "field_type": "String",
+                  "modifiers": ["public", "static", "final"],
+                  "annotations": [],
+                  "initial_value": { "type": "Literal", "value": "/post", "literal_type": "String" }
+                },
+                {
+                  "name": "CONTENT_TYPE",
+                  "field_type": "String",
+                  "modifiers": ["public", "static", "final"],
+                  "annotations": [],
+                  "initial_value": { "type": "Literal", "value": "application/json", "literal_type": "String" }
+                }
+              ],
+              "constructors": [],
+              "methods": [
+                {
+                  "name": "post",
+                  "modifiers": ["public"],
+                  "return_type": "String",
+                  "parameters": [
+                    { "name": "data", "type": "Map<String, String>" }
+                  ],
+                  "throws": ["IOException", "InterruptedException"],
+                  "annotations": [],
+                  "body": [
+                    {
+                      "type": "VariableDeclaration",
+                      "name": "connection",
+                      "variable_type": "HttpURLConnection",
+                      "value": {
+                        "type": "CastExpression",
+                        "cast_type": "HttpURLConnection",
+                        "expression": {
+                          "type": "MethodInvocation",
+                          "target": {
+                            "type": "ObjectCreation",
+                            "class": "java.net.URL",
+                            "arguments": [
+                              {
+                                "type": "BinaryExpression",
+                                "operator": "+",
+                                "left": { "type": "VariableReference", "name": "URL" },
+                                "right": { "type": "VariableReference", "name": "PATH" }
+                              }
+                            ]
+                          },
+                          "method_name": "openConnection",
+                          "arguments": []
+                        }
+                      }
+                    },
+                    { "type": "MethodInvocation", "target": "connection", "method_name": "setRequestMethod", "arguments": [{ "type": "Literal", "value": "POST" }] },
+                    { "type": "MethodInvocation", "target": "connection", "method_name": "setRequestProperty", "arguments": [{ "type": "Literal", "value": "Content-Type" }, { "type": "VariableReference", "name": "CONTENT_TYPE" }] },
+                    { "type": "MethodInvocation", "target": "connection", "method_name": "setDoOutput", "arguments": [{ "type": "Literal", "value": "true", "literal_type": "boolean" }] },
+                    {
+                      "type": "VariableDeclaration",
+                      "name": "jsonGeneratorFactory",
+                      "variable_type": "JsonGeneratorFactory",
+                      "inferred": true,
+                      "value": { "type": "MethodInvocation", "target": "Json", "method_name": "createGeneratorFactory", "arguments": [{ "type": "Literal", "value": "null" }] }
+                    },
+                    {
+                      "type": "VariableDeclaration",
+                      "name": "generator",
+                      "variable_type": "JsonGenerator",
+                      "inferred": true,
+                      "value": { "type": "MethodInvocation", "target": "jsonGeneratorFactory", "method_name": "createGenerator", "arguments": [{ "type": "MethodInvocation", "target": "connection", "method_name": "getOutputStream", "arguments": [] }] }
+                    },
+                    { "type": "MethodInvocation", "target": "generator", "method_name": "writeStartObject", "arguments": [] },
+                    {
+                      "type": "ForEachStatement",
+                      "variable": { "name": "entry", "type": "Map.Entry<String,String>", "inferred": true },
+                      "iterable": { "type": "MethodInvocation", "target": "data", "method_name": "entrySet", "arguments": [] },
+                      "body": [
+                        { "type": "MethodInvocation", "target": "generator", "method_name": "write", "arguments": [{ "type": "MethodInvocation", "target": "entry", "method_name": "getKey" }, { "type": "MethodInvocation", "target": "entry", "method_name": "getValue" }] }
+                      ]
+                    },
+                    { "type": "MethodInvocation", "target": "generator", "method_name": "writeEnd", "arguments": [] },
+                    { "type": "MethodInvocation", "target": "generator", "method_name": "close", "arguments": [] },
+                    {
+                      "type": "VariableDeclaration",
+                      "name": "responseCode",
+                      "variable_type": "int",
+                      "inferred": true,
+                      "value": { "type": "MethodInvocation", "target": "connection", "method_name": "getResponseCode", "arguments": [] }
+                    },
+                    {
+                      "type": "VariableDeclaration",
+                      "name": "responseBody",
+                      "variable_type": "String",
+                      "inferred": true,
+                      "value": {
+                        "type": "MethodChain",
+                        "description": "new Scanner(connection.getInputStream()).useDelimiter(\"\\\\A\").next()",
+                        "chain": [
+                          { "type": "ObjectCreation", "class": "Scanner", "arguments": [{ "type": "MethodInvocation", "target": "connection", "method_name": "getInputStream" }] },
+                          { "method_name": "useDelimiter", "arguments": [{ "type": "Literal", "value": "\\A" }] },
+                          { "method_name": "next", "arguments": [] }
+                        ]
+                      }
+                    },
+                    { "type": "MethodInvocation", "target": "connection", "method_name": "disconnect", "arguments": [] },
+                    { "type": "ReturnStatement", "value": { "type": "VariableReference", "name": "responseBody" } }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "file_path": "websocket_swing/swing/src/main/java/com/poc/model/ModelProperties.java",
+          "language": "java",
+          "package_name": "com.poc.model",
+          "imports": [],
+          "type_declarations": [
+            {
+              "type": "EnumDeclaration",
+              "name": "ModelProperties",
+              "modifiers": ["public"],
+              "annotations": [],
+              "values": [
+                "TEXT_AREA",
+                "FIRST_NAME",
+                "LAST_NAME",
+                "DATE_OF_BIRTH",
+                "ZIP",
+                "ORT",
+                "STREET",
+                "IBAN",
+                "BIC",
+                "VALID_FROM",
+                "FEMALE",
+                "MALE",
+                "DIVERSE"
+              ],
+              "note": "13 constants — each maps to a view field, a model ValueModel entry, and an OpenAPI PostObject property. FEMALE/MALE/DIVERSE use ValueModel<Boolean>; all others use ValueModel<String>."
+            }
+          ]
+        },
+        {
+          "file_path": "websocket_swing/swing/src/main/java/com/poc/model/PocModel.java",
+          "language": "java",
+          "package_name": "com.poc.model",
+          "imports": [
+            "com.poc.ValueModel",
+            "java.io.IOException",
+            "java.util.EnumMap",
+            "java.util.HashMap",
+            "java.util.Map"
+          ],
+          "type_declarations": [
+            {
+              "type": "ClassDeclaration",
+              "name": "PocModel",
+              "modifiers": ["public"],
+              "annotations": [],
+              "extends": null,
+              "implements": [],
+              "design_pattern": "MVP — Model layer; owns all domain state",
+              "fields": [
+                {
+                  "name": "model",
+                  "field_type": "Map<ModelProperties, ValueModel<?>>",
+                  "modifiers": ["public"],
+                  "annotations": [],
+                  "initial_value": {
+                    "type": "ObjectCreation",
+                    "class": "EnumMap",
+                    "type_arguments": ["ModelProperties", "ValueModel<?>"],
+                    "arguments": [{ "type": "ClassLiteral", "value": "ModelProperties.class" }]
+                  }
+                },
+                {
+                  "name": "httpBinService",
+                  "field_type": "HttpBinService",
+                  "modifiers": ["private"],
+                  "annotations": [],
+                  "initial_value": { "type": "ObjectCreation", "class": "HttpBinService", "arguments": [] }
+                },
+                {
+                  "name": "eventEmitter",
+                  "field_type": "EventEmitter",
+                  "modifiers": ["private"],
+                  "annotations": [],
+                  "initial_value": null
+                }
+              ],
+              "constructors": [
+                {
+                  "name": "PocModel",
+                  "modifiers": ["public"],
+                  "parameters": [
+                    { "name": "eventEmitter", "type": "EventEmitter" }
+                  ],
+                  "body": [
+                    {
+                      "type": "ModelInitializationBlock",
+                      "description": "Populates EnumMap with null-initialized ValueModel entries for all 13 ModelProperties constants",
+                      "string_entries": ["TEXT_AREA", "FIRST_NAME", "LAST_NAME", "DATE_OF_BIRTH", "ZIP", "ORT", "STREET", "IBAN", "BIC", "VALID_FROM"],
+                      "boolean_entries": ["MALE", "FEMALE", "DIVERSE"],
+                      "statements": [
+                        { "type": "MethodInvocation", "target": "model", "method_name": "put", "arguments": [{ "type": "EnumConstant", "enum": "ModelProperties", "constant": "TEXT_AREA" }, { "type": "ObjectCreation", "class": "ValueModel<String>", "arguments": [{ "type": "Literal", "value": "null" }] }] },
+                        { "type": "MethodInvocation", "target": "model", "method_name": "put", "arguments": [{ "type": "EnumConstant", "enum": "ModelProperties", "constant": "FIRST_NAME" }, { "type": "ObjectCreation", "class": "ValueModel<String>", "arguments": [{ "type": "Literal", "value": "null" }] }] },
+                        { "type": "MethodInvocation", "target": "model", "method_name": "put", "arguments": [{ "type": "EnumConstant", "enum": "ModelProperties", "constant": "LAST_NAME" }, { "type": "ObjectCreation", "class": "ValueModel<String>", "arguments": [{ "type": "Literal", "value": "null" }] }] },
+                        { "type": "MethodInvocation", "target": "model", "method_name": "put", "arguments": [{ "type": "EnumConstant", "enum": "ModelProperties", "constant": "DATE_OF_BIRTH" }, { "type": "ObjectCreation", "class": "ValueModel<String>", "arguments": [{ "type": "Literal", "value": "null" }] }] },
+                        { "type": "MethodInvocation", "target": "model", "method_name": "put", "arguments": [{ "type": "EnumConstant", "enum": "ModelProperties", "constant": "ZIP" }, { "type": "ObjectCreation", "class": "ValueModel<String>", "arguments": [{ "type": "Literal", "value": "null" }] }] },
+                        { "type": "MethodInvocation", "target": "model", "method_name": "put", "arguments": [{ "type": "EnumConstant", "enum": "ModelProperties", "constant": "ORT" }, { "type": "ObjectCreation", "class": "ValueModel<String>", "arguments": [{ "type": "Literal", "value": "null" }] }] },
+                        { "type": "MethodInvocation", "target": "model", "method_name": "put", "arguments": [{ "type": "EnumConstant", "enum": "ModelProperties", "constant": "STREET" }, { "type": "ObjectCreation", "class": "ValueModel<String>", "arguments": [{ "type": "Literal", "value": "null" }] }] },
+                        { "type": "MethodInvocation", "target": "model", "method_name": "put", "arguments": [{ "type": "EnumConstant", "enum": "ModelProperties", "constant": "IBAN" }, { "type": "ObjectCreation", "class": "ValueModel<String>", "arguments": [{ "type": "Literal", "value": "null" }] }] },
+                        { "type": "MethodInvocation", "target": "model", "method_name": "put", "arguments": [{ "type": "EnumConstant", "enum": "ModelProperties", "constant": "BIC" }, { "type": "ObjectCreation", "class": "ValueModel<String>", "arguments": [{ "type": "Literal", "value": "null" }] }] },
+                        { "type": "MethodInvocation", "target": "model", "method_name": "put", "arguments": [{ "type": "EnumConstant", "enum": "ModelProperties", "constant": "VALID_FROM" }, { "type": "ObjectCreation", "class": "ValueModel<String>", "arguments": [{ "type": "Literal", "value": "null" }] }] },
+                        { "type": "MethodInvocation", "target": "model", "method_name": "put", "arguments": [{ "type": "EnumConstant", "enum": "ModelProperties", "constant": "MALE" }, { "type": "ObjectCreation", "class": "ValueModel<Boolean>", "arguments": [{ "type": "Literal", "value": "null" }] }] },
+                        { "type": "MethodInvocation", "target": "model", "method_name": "put", "arguments": [{ "type": "EnumConstant", "enum": "ModelProperties", "constant": "FEMALE" }, { "type": "ObjectCreation", "class": "ValueModel<Boolean>", "arguments": [{ "type": "Literal", "value": "null" }] }] },
+                        { "type": "MethodInvocation", "target": "model", "method_name": "put", "arguments": [{ "type": "EnumConstant", "enum": "ModelProperties", "constant": "DIVERSE" }, { "type": "ObjectCreation", "class": "ValueModel<Boolean>", "arguments": [{ "type": "Literal", "value": "null" }] }] }
+                      ]
+                    },
+                    {
+                      "type": "Assignment",
+                      "target": "this.eventEmitter",
+                      "value": { "type": "VariableReference", "name": "eventEmitter" }
+                    }
+                  ]
+                }
+              ],
+              "methods": [
+                {
+                  "name": "action",
+                  "modifiers": ["public"],
+                  "return_type": "void",
+                  "parameters": [],
+                  "throws": ["IOException", "InterruptedException"],
+                  "annotations": [],
+                  "body": [
+                    {
+                      "type": "ForEachStatement",
+                      "description": "Log all model field values to stdout",
+                      "variable": { "name": "val", "type": "ModelProperties", "inferred": true },
+                      "iterable": { "type": "MethodInvocation", "target": "ModelProperties", "method_name": "values" },
+                      "body": [
+                        { "type": "MethodInvocation", "target": "System.out", "method_name": "println", "arguments": [{ "type": "StringConcatenation", "parts": ["val.toString()", "\": \"", "model.get(val).getField()"] }] }
+                      ]
+                    },
+                    {
+                      "type": "VariableDeclaration",
+                      "name": "data",
+                      "variable_type": "HashMap<String, String>",
+                      "inferred": true,
+                      "value": { "type": "ObjectCreation", "class": "HashMap", "type_arguments": ["String", "String"], "arguments": [] }
+                    },
+                    {
+                      "type": "ForEachStatement",
+                      "description": "Build serialization-safe String map from typed model entries",
+                      "variable": { "name": "val", "type": "ModelProperties", "inferred": true },
+                      "iterable": { "type": "MethodInvocation", "target": "ModelProperties", "method_name": "values" },
+                      "body": [
+                        { "type": "MethodInvocation", "target": "data", "method_name": "put", "arguments": [{ "type": "MethodInvocation", "target": "val", "method_name": "toString" }, { "type": "MethodInvocation", "target": "model.get(val).getField()", "method_name": "toString" }] }
+                      ]
+                    },
+                    {
+                      "type": "VariableDeclaration",
+                      "name": "responseBody",
+                      "variable_type": "String",
+                      "inferred": true,
+                      "value": { "type": "MethodInvocation", "target": "httpBinService", "method_name": "post", "arguments": [{ "type": "VariableReference", "name": "data" }] }
+                    },
+                    {
+                      "type": "IfStatement",
+                      "condition": {
+                        "type": "UnaryExpression",
+                        "operator": "!",
+                        "operand": { "type": "MethodInvocation", "target": "responseBody", "method_name": "isEmpty", "arguments": [] }
+                      },
+                      "then_block": [
+                        { "type": "MethodInvocation", "target": "eventEmitter", "method_name": "emit", "arguments": [{ "type": "VariableReference", "name": "responseBody" }] }
+                      ],
+                      "else_block": [
+                        { "type": "MethodInvocation", "target": "eventEmitter", "method_name": "emit", "arguments": [{ "type": "Literal", "value": "Failed operation", "literal_type": "String" }] }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "file_path": "websocket_swing/swing/src/main/java/com/poc/model/ViewData.java",
+          "language": "java",
+          "package_name": "com.poc.model",
+          "imports": [],
+          "type_declarations": [
+            {
+              "type": "ClassDeclaration",
+              "name": "ViewData",
+              "modifiers": ["public"],
+              "annotations": [],
+              "extends": null,
+              "implements": [],
+              "fields": [],
+              "constructors": [],
+              "methods": [],
+              "note": "Empty placeholder — reserved for future view-specific data transfer object"
+            }
+          ]
+        },
+        {
+          "file_path": "websocket_swing/swing/src/main/java/com/poc/presentation/PocPresenter.java",
+          "language": "java",
+          "package_name": "com.poc.presentation",
+          "imports": [
+            "com.poc.ValueModel",
+            "com.poc.model.EventEmitter",
+            "com.poc.model.ModelProperties",
+            "com.poc.model.PocModel",
+            "javax.swing.*",
+            "javax.swing.event.DocumentEvent",
+            "javax.swing.event.DocumentListener",
+            "javax.swing.text.BadLocationException",
+            "javax.swing.text.JTextComponent",
+            "java.io.IOException"
+          ],
+          "type_declarations": [
+            {
+              "type": "ClassDeclaration",
+              "name": "PocPresenter",
+              "modifiers": ["public"],
+              "annotations": [],
+              "extends": null,
+              "implements": [],
+              "design_pattern": "MVP — Presenter layer; mediates View ↔ Model",
+              "fields": [
+                { "name": "view",  "field_type": "PocView",  "modifiers": ["private"], "annotations": [], "initial_value": null },
+                { "name": "model", "field_type": "PocModel", "modifiers": ["private"], "annotations": [], "initial_value": null }
+              ],
+              "constructors": [
+                {
+                  "name": "PocPresenter",
+                  "modifiers": ["public"],
+                  "parameters": [
+                    { "name": "view",         "type": "PocView" },
+                    { "name": "model",        "type": "PocModel" },
+                    { "name": "eventEmitter", "type": "EventEmitter" }
+                  ],
+                  "body": [
+                    { "type": "Assignment", "target": "this.view",  "value": { "type": "VariableReference", "name": "view" } },
+                    { "type": "Assignment", "target": "this.model", "value": { "type": "VariableReference", "name": "model" } },
+                    {
+                      "type": "MethodInvocation",
+                      "target": "eventEmitter",
+                      "method_name": "subscribe",
+                      "arguments": [
+                        {
+                          "type": "LambdaExpression",
+                          "implements": "EventListener",
+                          "parameters": [{ "name": "eventData", "type": "String", "inferred": true }],
+                          "design_pattern": "Observer callback — resets view after successful HTTP response",
+                          "body": [
+                            { "type": "MethodInvocation", "target": "System.out", "method_name": "println", "arguments": [{ "type": "StringConcatenation" }] },
+                            { "type": "MethodInvocation", "target": "view.textArea",   "method_name": "setText",      "arguments": [{ "type": "VariableReference", "name": "eventData" }] },
+                            { "type": "MethodInvocation", "target": "view.firstName",  "method_name": "setText",      "arguments": [{ "type": "Literal", "value": "" }] },
+                            { "type": "MethodInvocation", "target": "view.name",       "method_name": "setText",      "arguments": [{ "type": "Literal", "value": "" }] },
+                            { "type": "MethodInvocation", "target": "view.dateOfBirth","method_name": "setText",      "arguments": [{ "type": "Literal", "value": "" }] },
+                            { "type": "MethodInvocation", "target": "view.zip",        "method_name": "setText",      "arguments": [{ "type": "Literal", "value": "" }] },
+                            { "type": "MethodInvocation", "target": "view.ort",        "method_name": "setText",      "arguments": [{ "type": "Literal", "value": "" }] },
+                            { "type": "MethodInvocation", "target": "view.street",     "method_name": "setText",      "arguments": [{ "type": "Literal", "value": "" }] },
+                            { "type": "MethodInvocation", "target": "view.iban",       "method_name": "setText",      "arguments": [{ "type": "Literal", "value": "" }] },
+                            { "type": "MethodInvocation", "target": "view.bic",        "method_name": "setText",      "arguments": [{ "type": "Literal", "value": "" }] },
+                            { "type": "MethodInvocation", "target": "view.validFrom",  "method_name": "setText",      "arguments": [{ "type": "Literal", "value": "" }] },
+                            { "type": "MethodInvocation", "target": "view.female",     "method_name": "setSelected",  "arguments": [{ "type": "Literal", "value": "true",  "literal_type": "boolean" }] },
+                            { "type": "MethodInvocation", "target": "view.male",       "method_name": "setSelected",  "arguments": [{ "type": "Literal", "value": "false", "literal_type": "boolean" }] },
+                            { "type": "MethodInvocation", "target": "view.diverse",    "method_name": "setSelected",  "arguments": [{ "type": "Literal", "value": "false", "literal_type": "boolean" }] }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "MethodInvocation",
+                      "target": "this.view.button",
+                      "method_name": "addActionListener",
+                      "arguments": [
+                        {
+                          "type": "LambdaExpression",
+                          "implements": "ActionListener",
+                          "parameters": [{ "name": "_", "type": "ActionEvent", "inferred": true, "note": "unnamed — event object unused" }],
+                          "design_pattern": "Command — button triggers model.action()",
+                          "body": [
+                            {
+                              "type": "TryCatchStatement",
+                              "try_block": [
+                                { "type": "MethodInvocation", "target": "model", "method_name": "action", "arguments": [] }
+                              ],
+                              "catch_clauses": [
+                                { "exception_type": "IOException",           "variable": "e", "body": [{ "type": "ThrowStatement", "value": { "type": "ObjectCreation", "class": "RuntimeException", "arguments": [{ "type": "VariableReference", "name": "e" }] } }] },
+                                { "exception_type": "InterruptedException",  "variable": "e", "body": [{ "type": "ThrowStatement", "value": { "type": "ObjectCreation", "class": "RuntimeException", "arguments": [{ "type": "VariableReference", "name": "e" }] } }] }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    { "type": "MethodInvocation", "target": "this", "method_name": "initializeBindings", "arguments": [] }
+                  ]
+                }
+              ],
+              "methods": [
+                {
+                  "name": "bind",
+                  "overload_count": 2,
+                  "modifiers": ["private"],
+                  "return_type": "void",
+                  "overloads": [
+                    {
+                      "signature": "bind(JTextComponent source, ModelProperties prop)",
+                      "parameters": [
+                        { "name": "source", "type": "JTextComponent" },
+                        { "name": "prop",   "type": "ModelProperties" }
+                      ],
+                      "body": [
+                        {
+                          "type": "VariableDeclaration",
+                          "name": "model",
+                          "variable_type": "ValueModel<String>",
+                          "value": { "type": "CastExpression", "cast_type": "ValueModel<String>", "expression": { "type": "MethodInvocation", "target": "PocPresenter.this.model.model", "method_name": "get", "arguments": [{ "type": "VariableReference", "name": "prop" }] } }
+                        },
+                        { "type": "MethodInvocation", "target": "model", "method_name": "setField", "arguments": [{ "type": "MethodInvocation", "target": "source", "method_name": "getText" }] },
+                        {
+                          "type": "MethodInvocation",
+                          "target": "source.getDocument()",
+                          "method_name": "addDocumentListener",
+                          "arguments": [
+                            {
+                              "type": "AnonymousClassInstantiation",
+                              "class": "DocumentListener",
+                              "design_pattern": "Observer — listens to Swing document changes",
+                              "methods": [
+                                {
+                                  "name": "insertUpdate",
+                                  "parameters": [{ "name": "e", "type": "DocumentEvent" }],
+                                  "body": [
+                                    {
+                                      "type": "TryCatchStatement",
+                                      "try_block": [
+                                        { "type": "VariableDeclaration", "name": "content", "variable_type": "String", "inferred": true, "value": { "type": "MethodInvocation", "target": "e.getDocument()", "method_name": "getText", "arguments": [{ "type": "Literal", "value": "0" }, { "type": "MethodInvocation", "target": "e.getDocument()", "method_name": "getLength" }] } },
+                                        { "type": "MethodInvocation", "target": "model", "method_name": "setField", "arguments": [{ "type": "VariableReference", "name": "content" }] }
+                                      ],
+                                      "catch_clauses": [{ "exception_type": "BadLocationException", "variable": "ex", "body": [{ "type": "ThrowStatement", "value": { "type": "ObjectCreation", "class": "RuntimeException", "arguments": [{ "type": "VariableReference", "name": "ex" }] } }] }]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "name": "removeUpdate",
+                                  "parameters": [{ "name": "e", "type": "DocumentEvent" }],
+                                  "body": [
+                                    {
+                                      "type": "TryCatchStatement",
+                                      "try_block": [
+                                        { "type": "VariableDeclaration", "name": "content", "variable_type": "String", "inferred": true, "value": { "type": "MethodInvocation", "target": "e.getDocument()", "method_name": "getText", "arguments": [{ "type": "Literal", "value": "0" }, { "type": "MethodInvocation", "target": "e.getDocument()", "method_name": "getLength" }] } },
+                                        {
+                                          "type": "VariableDeclaration",
+                                          "name": "model",
+                                          "note": "Re-fetches model — shadows outer model variable",
+                                          "variable_type": "ValueModel<String>",
+                                          "inferred": true,
+                                          "value": { "type": "CastExpression", "cast_type": "ValueModel<String>", "expression": { "type": "MethodInvocation", "target": "PocPresenter.this.model.model", "method_name": "get", "arguments": [{ "type": "VariableReference", "name": "prop" }] } }
+                                        },
+                                        { "type": "MethodInvocation", "target": "model", "method_name": "setField", "arguments": [{ "type": "VariableReference", "name": "content" }] }
+                                      ],
+                                      "catch_clauses": [{ "exception_type": "BadLocationException", "variable": "ex", "body": [{ "type": "ThrowStatement", "value": { "type": "ObjectCreation", "class": "RuntimeException", "arguments": [{ "type": "VariableReference", "name": "ex" }] } }] }]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "name": "changedUpdate",
+                                  "parameters": [{ "name": "e", "type": "DocumentEvent" }],
+                                  "body": [],
+                                  "note": "No-op — styled document changes not relevant for plain text fields"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "signature": "bind(JRadioButton source, ModelProperties prop)",
+                      "parameters": [
+                        { "name": "source", "type": "JRadioButton" },
+                        { "name": "prop",   "type": "ModelProperties" }
+                      ],
+                      "body": [
+                        {
+                          "type": "VariableDeclaration",
+                          "name": "model",
+                          "variable_type": "ValueModel<Boolean>",
+                          "value": { "type": "CastExpression", "cast_type": "ValueModel<Boolean>", "expression": { "type": "MethodInvocation", "target": "PocPresenter.this.model.model", "method_name": "get", "arguments": [{ "type": "VariableReference", "name": "prop" }] } }
+                        },
+                        { "type": "MethodInvocation", "target": "model", "method_name": "setField", "arguments": [{ "type": "MethodInvocation", "target": "source", "method_name": "isSelected" }] },
+                        {
+                          "type": "MethodInvocation",
+                          "target": "source",
+                          "method_name": "addChangeListener",
+                          "arguments": [
+                            {
+                              "type": "LambdaExpression",
+                              "implements": "ChangeListener",
+                              "parameters": [{ "name": "evt", "type": "ChangeEvent", "inferred": true }],
+                              "body": [
+                                { "type": "MethodInvocation", "target": "model", "method_name": "setField", "arguments": [{ "type": "MethodInvocation", "target": "source", "method_name": "isSelected" }] }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "initializeBindings",
+                  "modifiers": ["private"],
+                  "return_type": "void",
+                  "parameters": [],
+                  "throws": [],
+                  "annotations": [],
+                  "body": [
+                    { "type": "MethodInvocation", "method_name": "bind", "arguments": [{ "type": "FieldAccess", "target": "view", "field": "textArea"    }, { "type": "EnumConstant", "enum": "ModelProperties", "constant": "TEXT_AREA"    }] },
+                    { "type": "MethodInvocation", "method_name": "bind", "arguments": [{ "type": "FieldAccess", "target": "view", "field": "firstName"   }, { "type": "EnumConstant", "enum": "ModelProperties", "constant": "FIRST_NAME"  }] },
+                    { "type": "MethodInvocation", "method_name": "bind", "arguments": [{ "type": "FieldAccess", "target": "view", "field": "name"        }, { "type": "EnumConstant", "enum": "ModelProperties", "constant": "LAST_NAME"   }] },
+                    { "type": "MethodInvocation", "method_name": "bind", "arguments": [{ "type": "FieldAccess", "target": "view", "field": "dateOfBirth" }, { "type": "EnumConstant", "enum": "ModelProperties", "constant": "DATE_OF_BIRTH" }] },
+                    { "type": "MethodInvocation", "method_name": "bind", "arguments": [{ "type": "FieldAccess", "target": "view", "field": "zip"         }, { "type": "EnumConstant", "enum": "ModelProperties", "constant": "ZIP"         }] },
+                    { "type": "MethodInvocation", "method_name": "bind", "arguments": [{ "type": "FieldAccess", "target": "view", "field": "ort"         }, { "type": "EnumConstant", "enum": "ModelProperties", "constant": "ORT"         }] },
+                    { "type": "MethodInvocation", "method_name": "bind", "arguments": [{ "type": "FieldAccess", "target": "view", "field": "street"      }, { "type": "EnumConstant", "enum": "ModelProperties", "constant": "STREET"      }] },
+                    { "type": "MethodInvocation", "method_name": "bind", "arguments": [{ "type": "FieldAccess", "target": "view", "field": "iban"        }, { "type": "EnumConstant", "enum": "ModelProperties", "constant": "IBAN"        }] },
+                    { "type": "MethodInvocation", "method_name": "bind", "arguments": [{ "type": "FieldAccess", "target": "view", "field": "bic"         }, { "type": "EnumConstant", "enum": "ModelProperties", "constant": "BIC"         }] },
+                    { "type": "MethodInvocation", "method_name": "bind", "arguments": [{ "type": "FieldAccess", "target": "view", "field": "validFrom"   }, { "type": "EnumConstant", "enum": "ModelProperties", "constant": "VALID_FROM"  }] },
+                    { "type": "MethodInvocation", "method_name": "bind", "arguments": [{ "type": "FieldAccess", "target": "view", "field": "male"        }, { "type": "EnumConstant", "enum": "ModelProperties", "constant": "MALE"        }] },
+                    { "type": "MethodInvocation", "method_name": "bind", "arguments": [{ "type": "FieldAccess", "target": "view", "field": "female"      }, { "type": "EnumConstant", "enum": "ModelProperties", "constant": "FEMALE"      }] },
+                    { "type": "MethodInvocation", "method_name": "bind", "arguments": [{ "type": "FieldAccess", "target": "view", "field": "diverse"     }, { "type": "EnumConstant", "enum": "ModelProperties", "constant": "DIVERSE"     }] }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "file_path": "websocket_swing/swing/src/main/java/com/poc/presentation/PocView.java",
+          "language": "java",
+          "package_name": "com.poc.presentation",
+          "imports": [
+            "java.awt.*",
+            "javax.swing.*"
+          ],
+          "type_declarations": [
+            {
+              "type": "ClassDeclaration",
+              "name": "PocView",
+              "modifiers": ["public"],
+              "annotations": [],
+              "extends": null,
+              "implements": [],
+              "design_pattern": "MVP — View layer; pure UI construction, zero business logic",
+              "fields": [
+                { "name": "frame",       "field_type": "JFrame",       "modifiers": ["protected"], "initial_value": { "type": "ObjectCreation", "class": "JFrame",       "arguments": [{ "type": "Literal", "value": "Allegro" }] } },
+                { "name": "textArea",    "field_type": "JTextArea",    "modifiers": ["protected"], "initial_value": { "type": "ObjectCreation", "class": "JTextArea",    "arguments": [] } },
+                { "name": "name",        "field_type": "JTextField",   "modifiers": ["protected"], "initial_value": { "type": "ObjectCreation", "class": "JTextField",   "arguments": [] } },
+                { "name": "firstName",   "field_type": "JTextField",   "modifiers": ["protected"], "initial_value": { "type": "ObjectCreation", "class": "JTextField",   "arguments": [] } },
+                { "name": "dateOfBirth", "field_type": "JTextField",   "modifiers": ["protected"], "initial_value": { "type": "ObjectCreation", "class": "JTextField",   "arguments": [] } },
+                { "name": "zip",         "field_type": "JTextField",   "modifiers": ["protected"], "initial_value": { "type": "ObjectCreation", "class": "JTextField",   "arguments": [] } },
+                { "name": "ort",         "field_type": "JTextField",   "modifiers": ["protected"], "initial_value": { "type": "ObjectCreation", "class": "JTextField",   "arguments": [] } },
+                { "name": "street",      "field_type": "JTextField",   "modifiers": ["protected"], "initial_value": { "type": "ObjectCreation", "class": "JTextField",   "arguments": [] } },
+                { "name": "iban",        "field_type": "JTextField",   "modifiers": ["protected"], "initial_value": { "type": "ObjectCreation", "class": "JTextField",   "arguments": [] } },
+                { "name": "bic",         "field_type": "JTextField",   "modifiers": ["protected"], "initial_value": { "type": "ObjectCreation", "class": "JTextField",   "arguments": [] } },
+                { "name": "validFrom",   "field_type": "JTextField",   "modifiers": ["protected"], "initial_value": { "type": "ObjectCreation", "class": "JTextField",   "arguments": [] } },
+                { "name": "female",      "field_type": "JRadioButton", "modifiers": ["protected"], "initial_value": { "type": "ObjectCreation", "class": "JRadioButton", "arguments": [{ "type": "Literal", "value": "Weiblich"  }] } },
+                { "name": "male",        "field_type": "JRadioButton", "modifiers": ["protected"], "initial_value": { "type": "ObjectCreation", "class": "JRadioButton", "arguments": [{ "type": "Literal", "value": "Männlich"  }] } },
+                { "name": "diverse",     "field_type": "JRadioButton", "modifiers": ["protected"], "initial_value": { "type": "ObjectCreation", "class": "JRadioButton", "arguments": [{ "type": "Literal", "value": "Divers"    }] } },
+                { "name": "gender",      "field_type": "ButtonGroup",  "modifiers": ["protected"], "initial_value": { "type": "ObjectCreation", "class": "ButtonGroup",  "arguments": [] } },
+                { "name": "button",      "field_type": "JButton",      "modifiers": ["protected"], "initial_value": { "type": "ObjectCreation", "class": "JButton",      "arguments": [{ "type": "Literal", "value": "Anordnen" }] } }
+              ],
+              "constructors": [
+                {
+                  "name": "PocView",
+                  "modifiers": ["public"],
+                  "parameters": [],
+                  "body": [
+                    { "type": "MethodInvocation", "method_name": "initUI", "arguments": [] }
+                  ]
+                }
+              ],
+              "methods": [
+                {
+                  "name": "initUI",
+                  "modifiers": ["private"],
+                  "return_type": "void",
+                  "parameters": [],
+                  "throws": [],
+                  "annotations": [],
+                  "summary": "Builds GridBagLayout panel (6 cols × 6 rows). Row 0: firstName, name, dateOfBirth. Row 1: gender radio group (span=5). Row 2: street, zip, ort. Row 3: iban, bic, validFrom. Row 4: textArea (span=6, 200×400px). Row 5: button. Frame: 800×650, EXIT_ON_CLOSE, visible.",
+                  "body": [
+                    { "type": "VariableDeclaration", "name": "panel", "variable_type": "JPanel", "value": { "type": "ObjectCreation", "class": "JPanel" } },
+                    { "type": "MethodInvocation", "target": "panel", "method_name": "setLayout", "arguments": [{ "type": "ObjectCreation", "class": "GridBagLayout" }] },
+                    { "type": "VariableDeclaration", "name": "c", "variable_type": "GridBagConstraints", "value": { "type": "ObjectCreation", "class": "GridBagConstraints" } },
+                    { "type": "Assignment", "target": "c.ipady",  "value": { "type": "Literal", "value": "4" } },
+                    { "type": "Assignment", "target": "c.insets", "value": { "type": "ObjectCreation", "class": "Insets", "arguments": [4, 4, 4, 4] } },
+                    { "type": "Assignment", "target": "c.anchor", "value": { "type": "FieldAccess", "target": "GridBagConstraints", "field": "FIRST_LINE_END" } },
+                    {
+                      "type": "GridLayoutBlock",
+                      "layout": "GridBagLayout",
+                      "rows": [
+                        { "row": 0, "cells": [{ "col": 0, "component": "JLabel('Vorname')" },     { "col": 1, "component": "firstName", "fill": "HORIZONTAL", "weightx": 1 }, { "col": 2, "component": "JLabel('Name')" }, { "col": 3, "component": "name", "fill": "HORIZONTAL", "weightx": 1 }, { "col": 4, "component": "JLabel('Geburtsdatum')" }, { "col": 5, "component": "dateOfBirth", "fill": "HORIZONTAL", "weightx": 1 }] },
+                        { "row": 1, "cells": [{ "col": 0, "component": "JLabel('Geschlecht')" }, { "col": 1, "component": "genderPanel(female+male+diverse)", "gridwidth": 5, "anchor": "WEST" }] },
+                        { "row": 2, "cells": [{ "col": 0, "component": "JLabel('Strasse')" },     { "col": 1, "component": "street",      "fill": "HORIZONTAL", "weightx": 1 }, { "col": 2, "component": "JLabel('PLZ')"  }, { "col": 3, "component": "zip",   "fill": "HORIZONTAL", "weightx": 1 }, { "col": 4, "component": "JLabel('Ort')"        }, { "col": 5, "component": "ort",       "fill": "HORIZONTAL", "weightx": 1 }] },
+                        { "row": 3, "cells": [{ "col": 0, "component": "JLabel('IBAN')" },        { "col": 1, "component": "iban",        "fill": "HORIZONTAL", "weightx": 1 }, { "col": 2, "component": "JLabel('BIC')" }, { "col": 3, "component": "bic",   "fill": "HORIZONTAL", "weightx": 1 }, { "col": 4, "component": "JLabel('Gültig ab')" }, { "col": 5, "component": "validFrom", "fill": "HORIZONTAL", "weightx": 1 }] },
+                        { "row": 4, "cells": [{ "col": 0, "component": "JLabel('RT')" }, { "col": 1, "component": "textArea", "gridwidth": 6, "preferredSize": "200x400", "fill": "HORIZONTAL" }] },
+                        { "row": 5, "cells": [{ "col": 1, "component": "button" }] }
+                      ]
+                    },
+                    { "type": "MethodInvocation", "target": "gender", "method_name": "add", "arguments": [{ "type": "VariableReference", "name": "female" }] },
+                    { "type": "MethodInvocation", "target": "gender", "method_name": "add", "arguments": [{ "type": "VariableReference", "name": "male" }] },
+                    { "type": "MethodInvocation", "target": "gender", "method_name": "add", "arguments": [{ "type": "VariableReference", "name": "diverse" }] },
+                    { "type": "MethodInvocation", "target": "female", "method_name": "setSelected", "arguments": [{ "type": "Literal", "value": "true" }] },
+                    { "type": "MethodInvocation", "target": "frame.getContentPane()", "method_name": "add", "arguments": [{ "type": "VariableReference", "name": "panel" }] },
+                    { "type": "MethodInvocation", "target": "frame", "method_name": "setDefaultCloseOperation", "arguments": [{ "type": "FieldAccess", "target": "JFrame", "field": "EXIT_ON_CLOSE" }] },
+                    { "type": "MethodInvocation", "target": "frame", "method_name": "setSize",    "arguments": [800, 650] },
+                    { "type": "MethodInvocation", "target": "frame", "method_name": "setVisible", "arguments": [{ "type": "Literal", "value": "true" }] }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "module_id": "node_websocket_server",
+      "language": "javascript",
+      "runtime": "node.js",
+      "source_root": "websocket_swing/node-server/src",
+      "files": [
+        {
+          "file_path": "websocket_swing/node-server/src/WebsocketServer.js",
+          "language": "javascript",
+          "module_type": "CommonJS",
+          "design_pattern": "WebSocket Pub/Sub Broadcast Server",
+          "requires": [
+            { "variable": "webSocketServer", "module": "websocket", "member": "server" },
+            { "variable": "http",            "module": "http" }
+          ],
+          "global_variables": [
+            { "name": "webSocketsServerPort", "type": "number",  "value": 1337 },
+            { "name": "messages",             "type": "Array",   "value": [] },
+            { "name": "clients",              "type": "Array",   "value": [] }
+          ],
+          "top_level_statements": [
+            {
+              "type": "VariableDeclaration",
+              "name": "server",
+              "value": { "type": "MethodInvocation", "target": "http", "method_name": "createServer", "arguments": [{ "type": "FunctionExpression", "parameters": ["request", "response"], "body": [], "note": "Empty HTTP handler — acts as WebSocket upgrade target only" }] }
+            },
+            {
+              "type": "MethodInvocation",
+              "target": "server",
+              "method_name": "listen",
+              "arguments": [
+                { "type": "VariableReference", "name": "webSocketsServerPort" },
+                { "type": "FunctionExpression", "parameters": [], "body": [{ "type": "MethodInvocation", "target": "console", "method_name": "log" }] }
+              ]
+            },
+            {
+              "type": "VariableDeclaration",
+              "name": "wsServer",
+              "value": { "type": "ObjectCreation", "class": "webSocketServer", "arguments": [{ "httpServer": "server" }] }
+            },
+            {
+              "type": "EventHandler",
+              "target": "wsServer",
+              "event": "request",
+              "handler": {
+                "type": "FunctionExpression",
+                "parameters": [{ "name": "request" }],
+                "body": [
+                  { "type": "VariableDeclaration", "name": "connection", "value": { "type": "MethodInvocation", "target": "request", "method_name": "accept", "arguments": [{ "type": "Literal", "value": "null" }, { "type": "FieldAccess", "target": "request", "field": "origin" }] } },
+                  { "type": "VariableDeclaration", "name": "index", "value": { "type": "BinaryExpression", "operator": "-", "left": { "type": "MethodInvocation", "target": "clients", "method_name": "push", "arguments": [{ "type": "VariableReference", "name": "connection" }] }, "right": { "type": "Literal", "value": "1" } } },
+                  {
+                    "type": "EventHandler",
+                    "target": "connection",
+                    "event": "message",
+                    "handler": {
+                      "type": "FunctionExpression",
+                      "parameters": [{ "name": "message" }],
+                      "body": [
+                        {
+                          "type": "IfStatement",
+                          "condition": { "type": "BinaryExpression", "operator": "===", "left": { "type": "FieldAccess", "target": "message", "field": "type" }, "right": { "type": "Literal", "value": "utf8" } },
+                          "then_block": [
+                            { "type": "VariableDeclaration", "name": "json", "value": { "type": "FieldAccess", "target": "message", "field": "utf8Data" } },
+                            { "type": "MethodInvocation", "target": "console", "method_name": "log", "arguments": ["received message log"] },
+                            {
+                              "type": "ForStatement",
+                              "init": { "type": "VariableDeclaration", "name": "i", "value": 0 },
+                              "condition": { "type": "BinaryExpression", "operator": "<", "left": "i", "right": "clients.length" },
+                              "update": { "type": "UnaryExpression", "operator": "++", "operand": "i" },
+                              "body": [
+                                { "type": "MethodInvocation", "target": "clients[i]", "method_name": "sendUTF", "arguments": [{ "type": "VariableReference", "name": "json" }], "note": "Broadcasts to ALL connected clients simultaneously" }
+                              ]
+                            }
+                          ],
+                          "else_block": null
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "EventHandler",
+                    "target": "connection",
+                    "event": "close",
+                    "handler": {
+                      "type": "FunctionExpression",
+                      "parameters": [{ "name": "connection" }],
+                      "body": [
+                        { "type": "MethodInvocation", "target": "console", "method_name": "log", "arguments": ["disconnect log"] },
+                        { "type": "MethodInvocation", "target": "clients", "method_name": "splice", "arguments": [{ "type": "VariableReference", "name": "index" }, { "type": "Literal", "value": "1" }], "note": "Removes this client from the broadcast list using closure-captured index" }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "module_id": "vue_web_client",
+      "language": "javascript",
+      "framework": "Vue.js 2.x",
+      "source_root": "websocket_swing/node-vue-client/src",
+      "files": [
+        {
+          "file_path": "websocket_swing/node-vue-client/src/main.js",
+          "language": "javascript",
+          "module_type": "ES Module",
+          "imports": [
+            { "default_import": "Vue", "from": "vue" },
+            { "default_import": "App", "from": "./App.vue" }
+          ],
+          "top_level_statements": [
+            { "type": "Assignment", "target": "Vue.config.productionTip", "value": { "type": "Literal", "value": "false", "literal_type": "boolean" } },
+            {
+              "type": "ExpressionStatement",
+              "expression": {
+                "type": "MethodChain",
+                "chain": [
+                  { "type": "ObjectCreation", "class": "Vue", "arguments": [{ "render": { "type": "ArrowFunctionExpression", "parameters": ["h"], "body": { "type": "MethodInvocation", "method_name": "h", "arguments": ["App"] } } }] },
+                  { "method_name": "$mount", "arguments": [{ "type": "Literal", "value": "#app" }] }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "file_path": "websocket_swing/node-vue-client/src/App.vue",
+          "language": "vue",
+          "component_name": "app",
+          "template": {
+            "root_element": "div#app",
+            "children": [
+              { "element": "div#header", "children": ["span#logo", "span(text:'Search Mock')"] },
+              { "element": "Search", "props": { "content_textarea": "Search Mock" } }
+            ]
+          },
+          "script": {
+            "imports": [{ "default_import": "Search", "from": "./components/Search.vue" }],
+            "export_default": { "name": "app", "components": { "Search": "Search" } }
+          },
+          "style": { "scoped": false, "selectors": ["#app", "#header", "#logo"] }
+        },
+        {
+          "file_path": "websocket_swing/node-vue-client/src/components/Search.vue",
+          "language": "vue",
+          "component_name": "Search",
+          "design_pattern": "Vue SFC with real-time WebSocket integration and in-memory search",
+          "template": {
+            "root_element": "div#step_form",
+            "sections": [
+              {
+                "id": "person",
+                "description": "Form with 19 v-model bindings for person data entry",
+                "v_model_bindings": ["formdata.last","formdata.knr","formdata.iban","formdata.first","formdata.betriebsbez","formdata.bic","formdata.dob","formdata.rvnr","formdata.nationality","formdata.zip","formdata.postfach","formdata.bgnr","formdata.ort","formdata.vorsatzwort","formdata.leistung","formdata.street","formdata.title","formdata.traegernr","formdata.hausnr"],
+                "disabled_fields": ["knr","iban","betriebsbez","bic","rvnr","postfach","bgnr","traegernr"],
+                "button": { "event": "click", "handler": "searchPerson()" }
+              },
+              {
+                "id": "search_result",
+                "description": "Table of matching person records",
+                "v_for": "item in search_result",
+                "columns": ["Kdn.-nr","Name","Vorname","Geburtsdatum","PLZ","Strasse","Ort"],
+                "click_handler": "selectResult(item)",
+                "highlight_condition": "item.knr == selected_result.knr"
+              },
+              {
+                "id": "search_result_zahlungsempfänger",
+                "description": "Table of payment recipients for selected person",
+                "v_for": "item in selected_result.zahlungsempfaenger",
+                "columns": ["IBAN","BIC","Gültig ab"],
+                "click_handler": "zahlungsempfaengerSelected(item)",
+                "highlight_condition": "item.iban == zahlungsempfaenger_selected.iban"
+              },
+              { "id": "send_to_allegro", "description": "Button: sends selected result over WebSocket", "event": "click", "handler": "sendMessage(selected_result, 'textfield')" },
+              { "id": "textarea",        "description": "Free-text area, change-watched → sendMessage(val, 'textarea')", "v_model": "internal_content_textarea" }
+            ]
+          },
+          "script": {
+            "imports": [],
+            "export_default": {
+              "name": "Search",
+              "props": [
+                { "name": "result_selected",   "type": "String" },
+                { "name": "content_textarea",  "type": "String" }
+              ],
+              "data_function": {
+                "return_fields": [
+                  { "name": "internal_content_textarea",   "initial_value_expr": "this.content_textarea" },
+                  { "name": "formdata",                    "type": "Object",  "initial_value": {} },
+                  { "name": "search_result",               "type": "Array",   "initial_value": [] },
+                  { "name": "selected_result",             "type": "Object",  "initial_value": {} },
+                  { "name": "zahlungsempfaenger_selected", "type": "String",  "initial_value": "" },
+                  {
+                    "name": "search_space",
+                    "type": "Array<Person>",
+                    "description": "Hard-coded mock dataset — 5 persons, each with zahlungsempfaenger sub-array",
+                    "record_count": 5,
+                    "person_schema": { "fields": ["first","name","dob","zip","ort","street","hausnr","knr"] },
+                    "zahlungsempfaenger_schema": { "fields": ["iban","bic","valid_from","valid_until","type"] },
+                    "sample_persons": ["Hans Mayer (Trogen)","Linda Reitmayr (Hof)","Karl May (Berlin)","Jens Mueller (Potsdam)","Steffi Ruckmueller (Templin)"]
+                  }
+                ]
+              },
+              "lifecycle_hooks": [
+                { "hook": "mounted", "body": [{ "type": "MethodInvocation", "target": "this", "method_name": "connect" }] }
+              ],
+              "methods": [
+                {
+                  "name": "connect",
+                  "body": [
+                    { "type": "Assignment", "target": "this.socket", "value": { "type": "ObjectCreation", "class": "WebSocket", "arguments": [{ "type": "Literal", "value": "ws://localhost:1337/" }] } },
+                    { "type": "Assignment", "target": "this.socket.onopen", "value": { "type": "ArrowFunctionExpression", "body": [{ "type": "Assignment", "target": "this.status", "value": "connected" }] } }
+                  ]
+                },
+                {
+                  "name": "disconnect",
+                  "body": [
+                    { "type": "MethodInvocation", "target": "this.socket", "method_name": "close" },
+                    { "type": "Assignment", "target": "this.status", "value": "disconnected" },
+                    { "type": "Assignment", "target": "this.logs",   "value": [] }
+                  ]
+                },
+                {
+                  "name": "searchPerson",
+                  "body": [
+                    { "type": "Assignment", "target": "this.search_result", "value": [] },
+                    {
+                      "type": "ForStatement",
+                      "init": "let i = 0",
+                      "condition": "i < this.search_space.length",
+                      "update": "i++",
+                      "body": [
+                        { "type": "VariableDeclaration", "name": "element", "value": "this.search_space[i]" },
+                        {
+                          "type": "IfStatement",
+                          "condition": {
+                            "type": "CompoundBooleanExpression",
+                            "operator": "||",
+                            "description": "Matches on last name, first name, zip (exact), ort, street, or house number (case-insensitive contains)",
+                            "operands": [
+                              "formdata.last   && element.name.toLowerCase().includes(formdata.last.toLowerCase())",
+                              "formdata.first  && element.first.toLowerCase().includes(formdata.first.toLowerCase())",
+                              "formdata.zip    && element.zip == formdata.zip",
+                              "formdata.ort    && element.ort.toLowerCase().includes(formdata.ort.toLowerCase())",
+                              "formdata.street && element.street.toLowerCase().includes(formdata.street.toLowerCase())",
+                              "formdata.hausnr && element.hausnr.toLowerCase().includes(formdata.hausnr.toLowerCase())"
+                            ]
+                          },
+                          "then_block": [
+                            { "type": "MethodInvocation", "target": "this.search_result", "method_name": "push", "arguments": ["element"] }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "sendMessage",
+                  "parameters": [{ "name": "e" }, { "name": "target" }],
+                  "body": [
+                    {
+                      "type": "VariableDeclaration",
+                      "name": "obj_to_send",
+                      "note": "Deep clone via JSON round-trip: JSON.parse(JSON.stringify(e))",
+                      "value": { "type": "MethodInvocation", "target": "JSON", "method_name": "parse", "arguments": [{ "type": "MethodInvocation", "target": "JSON", "method_name": "stringify", "arguments": ["e"] }] }
+                    },
+                    {
+                      "type": "IfStatement",
+                      "condition": { "type": "BinaryExpression", "operator": "==", "left": "target", "right": "\"textfield\"" },
+                      "then_block": [{ "type": "Assignment", "target": "obj_to_send.zahlungsempfaenger", "value": "this.zahlungsempfaenger_selected" }]
+                    },
+                    {
+                      "type": "MethodInvocation",
+                      "target": "this.socket",
+                      "method_name": "send",
+                      "arguments": [{ "type": "MethodInvocation", "target": "JSON", "method_name": "stringify", "arguments": [{ "target": "target", "content": "obj_to_send" }] }],
+                      "note": "Sends {target:'textfield'|'textarea', content:{...}} over WebSocket"
+                    }
+                  ]
+                },
+                {
+                  "name": "selectResult",
+                  "parameters": [{ "name": "item" }],
+                  "body": [{ "type": "Assignment", "target": "this.selected_result", "value": "item" }]
+                },
+                {
+                  "name": "zahlungsempfaengerSelected",
+                  "parameters": [{ "name": "zahlungsempfaenger" }],
+                  "body": [{ "type": "Assignment", "target": "this.zahlungsempfaenger_selected", "value": "zahlungsempfaenger" }]
+                }
+              ],
+              "watchers": [
+                {
+                  "watched": "internal_content_textarea",
+                  "handler_parameters": ["val"],
+                  "body": [
+                    { "type": "MethodInvocation", "target": "this", "method_name": "sendMessage", "arguments": ["val", "\"textarea\""], "note": "Every textarea keystroke sends a WebSocket message" }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "module_id": "openapi_spec",
+      "language": "yaml",
+      "spec_type": "OpenAPI",
+      "spec_version": "3.0.1",
+      "file_path": "websocket_swing/api.yml",
+      "info": { "title": "Allegro PoC", "description": "API documentation for the Allegro modernization PoC.", "version": "1.0.0" },
+      "servers": [{ "url": "http://localhost:8080" }],
+      "paths": [
+        {
+          "path": "/post",
+          "method": "POST",
+          "operation_id": "Post",
+          "tags": ["Post"],
+          "summary": "A simple Post resource returning what was sent.",
+          "request_body": { "required": true, "content_type": "application/json", "schema": "PostObject" },
+          "responses": { "200": { "content_type": "application/json", "schema": "PostObject" } }
+        }
+      ],
+      "schemas": [
+        {
+          "name": "PostObject",
+          "type": "object",
+          "properties": ["FIRST_NAME","LAST_NAME","DATE_OF_BIRTH","STREET","BIC","ORT","ZIP","FEMALE","MALE","DIVERSE","IBAN","VALID_FROM","TEXT_AREA"],
+          "all_types": "string",
+          "note": "All 13 properties exactly mirror the ModelProperties enum constant names"
+        },
+        {
+          "name": "PostResponseObject",
+          "type": "object",
+          "properties": ["args","data","files","form","headers","json","origin","url"],
+          "json_property_schema_ref": "PostObject"
+        }
+      ]
+    }
+  ],
+  "design_patterns": [
+    {
+      "pattern": "MVP (Model-View-Presenter)",
+      "scope": "Java Swing application",
+      "participants": {
+        "model":     "PocModel — holds all domain state in EnumMap<ModelProperties, ValueModel<?>>; performs HTTP POST via HttpBinService; fires events via EventEmitter",
+        "view":      "PocView — pure Swing UI; exposes protected field references so presenter can attach listeners; no logic whatsoever",
+        "presenter": "PocPresenter — attaches DocumentListeners and ChangeListeners to view fields; updates model on change; subscribes to EventEmitter to reset view after model action completes"
+      }
+    },
+    {
+      "pattern": "Observer / Event Bus",
+      "scope": "Java model ↔ presenter communication",
+      "participants": {
+        "subject":            "EventEmitter — maintains List<EventListener>; loops on emit()",
+        "observer_interface": "EventListener — single-method interface: void onEvent(String eventData); compatible with lambda",
+        "concrete_observer":  "Lambda in PocPresenter constructor — clears form fields and populates textArea with HTTP response body"
+      }
+    },
+    {
+      "pattern": "Generic Value Holder",
+      "scope": "Java model layer",
+      "participants": {
+        "holder": "ValueModel<T> — type-safe mutable wrapper",
+        "usage":  "10 × ValueModel<String> for text fields; 3 × ValueModel<Boolean> for radio buttons, all stored in EnumMap keyed by ModelProperties"
+      }
+    },
+    {
+      "pattern": "WebSocket Pub/Sub Broadcast",
+      "scope": "Node.js server + Vue.js client",
+      "participants": {
+        "broker":     "WebsocketServer.js — maintains clients[] array; on every message broadcasts to all clients",
+        "publishers": "Search.vue sendMessage() — sends person data on button click; also on every textarea keystroke via watcher",
+        "subscribers": "All currently connected WebSocket clients receive the broadcast (including potential future Java Swing integration)"
+      }
+    },
+    {
+      "pattern": "Two-Way Data Binding",
+      "scope": "Cross-platform",
+      "java_impl":  "PocPresenter.bind() attaches DocumentListener (for text) / ChangeListener (for radio) to each UI component; syncs to ValueModel on every edit",
+      "vue_impl":   "v-model directives on all form inputs reactively sync with formdata object"
+    },
+    {
+      "pattern": "Service Layer",
+      "scope": "Java HTTP integration",
+      "participant": "HttpBinService — encapsulates raw HttpURLConnection setup, javax.json streaming serialization, response reading; consumed solely by PocModel.action()"
+    },
+    {
+      "pattern": "Command",
+      "scope": "Java button handler",
+      "participant": "ActionListener lambda on PocView.button — when clicked, delegates to PocModel.action(), wrapping checked exceptions in RuntimeException"
+    }
+  ],
+  "call_graph": {
+    "java_swing": [
+      { "caller": "Main.main",                                    "callee": "PocView.<init>",                               "type": "ObjectCreation" },
+      { "caller": "Main.main",                                    "callee": "EventEmitter.<init>",                          "type": "ObjectCreation" },
+      { "caller": "Main.main",                                    "callee": "PocModel.<init>",                              "type": "ObjectCreation" },
+      { "caller": "Main.main",                                    "callee": "PocPresenter.<init>",                          "type": "ObjectCreation" },
+      { "caller": "PocView.<init>",                               "callee": "PocView.initUI",                               "type": "MethodCall" },
+      { "caller": "PocPresenter.<init>",                          "callee": "EventEmitter.subscribe",                       "type": "MethodCall" },
+      { "caller": "PocPresenter.<init>",                          "callee": "PocView.button.addActionListener",             "type": "EventRegistration" },
+      { "caller": "PocPresenter.<init>",                          "callee": "PocPresenter.initializeBindings",              "type": "MethodCall" },
+      { "caller": "PocPresenter.initializeBindings",              "callee": "PocPresenter.bind(JTextComponent,ModelProperties)", "type": "MethodCall", "invocation_count": 10 },
+      { "caller": "PocPresenter.initializeBindings",              "callee": "PocPresenter.bind(JRadioButton,ModelProperties)",   "type": "MethodCall", "invocation_count": 3 },
+      { "caller": "PocPresenter.bind(JTextComponent,...)",        "callee": "JDocument.addDocumentListener",                "type": "EventRegistration" },
+      { "caller": "PocPresenter.bind(JRadioButton,...)",          "callee": "JRadioButton.addChangeListener",               "type": "EventRegistration" },
+      { "caller": "DocumentListener.insertUpdate / removeUpdate", "callee": "ValueModel<String>.setField",                  "type": "EventCallback" },
+      { "caller": "ChangeListener.stateChanged",                  "callee": "ValueModel<Boolean>.setField",                 "type": "EventCallback" },
+      { "caller": "ActionListener[button click]",                 "callee": "PocModel.action",                              "type": "EventCallback" },
+      { "caller": "PocModel.action",                              "callee": "HttpBinService.post",                          "type": "MethodCall" },
+      { "caller": "PocModel.action",                              "callee": "EventEmitter.emit",                            "type": "MethodCall" },
+      { "caller": "EventEmitter.emit",                            "callee": "EventListener.onEvent",                        "type": "MethodCall" },
+      { "caller": "EventListener.onEvent[Presenter lambda]",      "callee": "PocView.*setText / setSelected",               "type": "UIUpdate" }
+    ],
+    "nodejs_server": [
+      { "caller": "module init",            "callee": "http.createServer",    "type": "FunctionCall" },
+      { "caller": "module init",            "callee": "server.listen",        "type": "FunctionCall" },
+      { "caller": "module init",            "callee": "new webSocketServer",  "type": "ObjectCreation" },
+      { "caller": "wsServer.on('request')", "callee": "request.accept",       "type": "EventCallback" },
+      { "caller": "wsServer.on('request')", "callee": "clients.push",         "type": "FunctionCall" },
+      { "caller": "connection.on('message')", "callee": "clients[i].sendUTF", "type": "Broadcast" },
+      { "caller": "connection.on('close')",   "callee": "clients.splice",     "type": "FunctionCall" }
+    ],
+    "vue_client": [
+      { "caller": "Vue.$mount",                            "callee": "App render",                   "type": "Framework" },
+      { "caller": "App template",                          "callee": "Search component",             "type": "ComponentRender" },
+      { "caller": "Search mounted()",                      "callee": "Search.connect",               "type": "LifecycleHook" },
+      { "caller": "Search.connect",                        "callee": "new WebSocket",                "type": "ObjectCreation" },
+      { "caller": "button[Suchen click]",                  "callee": "Search.searchPerson",          "type": "EventHandler" },
+      { "caller": "button[Übernehmen click]",              "callee": "Search.sendMessage",           "type": "EventHandler" },
+      { "caller": "table row[click]",                      "callee": "Search.selectResult",          "type": "EventHandler" },
+      { "caller": "zahlungsempfaenger row[click]",         "callee": "Search.zahlungsempfaengerSelected", "type": "EventHandler" },
+      { "caller": "watch:internal_content_textarea",       "callee": "Search.sendMessage",           "type": "Watcher" },
+      { "caller": "Search.sendMessage",                    "callee": "WebSocket.send",               "type": "NetworkCall" }
+    ],
+    "cross_tier": [
+      { "from": "Search.vue sendMessage()",        "to": "WebsocketServer.js (ws://localhost:1337)", "protocol": "WebSocket",  "message_format": "JSON {target:'textfield'|'textarea', content:{...}}" },
+      { "from": "WebsocketServer.js broadcast",    "to": "All WebSocket clients",                    "protocol": "WebSocket",  "note": "Fan-out to all connected clients" },
+      { "from": "PocModel.action()",               "to": "REST API http://localhost:8080/post",       "protocol": "HTTP POST",  "payload": "JSON matching PostObject schema (all ModelProperties as string properties)" },
+      { "from": "REST API :8080/post response",    "to": "PocModel.action() → EventEmitter.emit()", "protocol": "HTTP 200",   "payload": "PostResponseObject JSON body" },
+      { "from": "EventEmitter.emit(responseBody)", "to": "PocPresenter EventListener lambda",        "protocol": "In-process", "note": "Triggers UI reset and textArea population" }
+    ]
+  },
+  "data_flow": {
+    "user_input_to_model": [
+      "JTextField / JTextArea keystroke → DocumentListener.insertUpdate or removeUpdate → e.getDocument().getText(0, length) → ValueModel<String>.setField(content)",
+      "JRadioButton toggle → ChangeListener.stateChanged → source.isSelected() → ValueModel<Boolean>.setField(isSelected)"
+    ],
+    "model_to_api": [
+      "User clicks 'Anordnen' → ActionListener lambda → PocModel.action()",
+      "PocModel.action(): iterates ModelProperties.values() → builds HashMap<String,String> (toString() on every field)",
+      "HashMap passed to HttpBinService.post(data)",
+      "HttpBinService: opens HttpURLConnection POST to http://localhost:8080/post, serializes map to JSON via javax.json streaming API",
+      "Reads response with Scanner(inputStream).useDelimiter('\\\\A').next() → returns responseBody String"
+    ],
+    "api_response_to_view": [
+      "responseBody non-empty → EventEmitter.emit(responseBody)",
+      "EventEmitter iterates listeners → calls EventListener.onEvent(responseBody)",
+      "Presenter lambda: view.textArea.setText(responseBody), clears firstName/name/dateOfBirth/zip/ort/street/iban/bic/validFrom, resets female=true, male=false, diverse=false"
+    ],
+    "vue_search_to_websocket": [
+      "User types in form fields → v-model reactive binding → formdata object updated",
+      "User clicks 'Suchen' → searchPerson() → iterates search_space → pushes matching elements to search_result",
+      "User clicks table row → selectResult(item) → selected_result = item",
+      "User clicks IBAN/BIC row → zahlungsempfaengerSelected(item) → zahlungsempfaenger_selected = item",
+      "User clicks 'Nach ALLEGRO übernehmen' → sendMessage(selected_result, 'textfield') → deep-clones result, attaches selected zahlungsempfaenger → JSON.stringify → WebSocket.send",
+      "WebSocket server receives → broadcasts to all clients"
+    ],
+    "vue_textarea_realtime_sync": [
+      "User types in textarea → v-model → internal_content_textarea reactive data updated",
+      "Vue watcher fires immediately on each change → sendMessage(val, 'textarea') → WebSocket.send({target:'textarea', content:val})",
+      "All WebSocket clients receive the message in real time"
+    ]
+  },
+  "class_hierarchy": {
+    "java": {
+      "classes": [
+        { "name": "Main",          "package": "com",               "extends": "Object", "implements": [] },
+        { "name": "ValueModel<T>", "package": "com.poc",           "extends": "Object", "implements": [] },
+        { "name": "EventEmitter",  "package": "com.poc.model",     "extends": "Object", "implements": [] },
+        { "name": "HttpBinService","package": "com.poc.model",     "extends": "Object", "implements": [] },
+        { "name": "PocModel",      "package": "com.poc.model",     "extends": "Object", "implements": [] },
+        { "name": "ViewData",      "package": "com.poc.model",     "extends": "Object", "implements": [], "note": "empty placeholder" },
+        { "name": "PocPresenter",  "package": "com.poc.presentation","extends": "Object","implements": [] },
+        { "name": "PocView",       "package": "com.poc.presentation","extends": "Object","implements": [] }
+      ],
+      "interfaces": [
+        { "name": "EventListener", "package": "com.poc.model", "extends": [], "note": "Functional interface — lambda compatible" }
+      ],
+      "enums": [
+        { "name": "ModelProperties", "package": "com.poc.model", "extends": "Enum<ModelProperties>", "constants": 13 }
+      ],
+      "relationships": [
+        { "from": "PocPresenter",   "to": "PocView",        "type": "composition",          "field": "view: PocView",                                    "cardinality": "1:1" },
+        { "from": "PocPresenter",   "to": "PocModel",       "type": "composition",          "field": "model: PocModel",                                  "cardinality": "1:1" },
+        { "from": "PocPresenter",   "to": "EventEmitter",   "type": "uses",                 "note": "calls subscribe() in constructor, not stored as field" },
+        { "from": "PocPresenter",   "to": "EventListener",  "type": "implements_via_lambda","note": "lambda body is the onEvent implementation"           },
+        { "from": "PocModel",       "to": "HttpBinService", "type": "composition",          "field": "httpBinService: HttpBinService",                    "cardinality": "1:1" },
+        { "from": "PocModel",       "to": "EventEmitter",   "type": "association",          "field": "eventEmitter: EventEmitter",                        "cardinality": "1:1" },
+        { "from": "PocModel",       "to": "ValueModel",     "type": "uses_generic",         "note": "EnumMap<ModelProperties, ValueModel<?>> — 13 entries" },
+        { "from": "EventEmitter",   "to": "EventListener",  "type": "uses_list",            "field": "listeners: List<EventListener>",                    "cardinality": "1:n" },
+        { "from": "Main",           "to": "PocView",        "type": "creates",              "note": "in main()" },
+        { "from": "Main",           "to": "EventEmitter",   "type": "creates",              "note": "in main()" },
+        { "from": "Main",           "to": "PocModel",       "type": "creates",              "note": "in main()" },
+        { "from": "Main",           "to": "PocPresenter",   "type": "creates",              "note": "in main()" }
+      ]
+    },
+    "vue_components": [
+      { "name": "App",    "parent": "Vue root",  "children": ["Search"], "props_received": [] },
+      { "name": "Search", "parent": "App",       "children": [],         "props_received": ["result_selected","content_textarea"] }
+    ]
+  },
+  "complexity_metrics": {
+    "java_files": [
+      { "file": "Main.java",         "lines": 23,  "classes": 1, "methods": 1, "constructors": 0, "lambdas": 0, "cyclomatic_complexity": 1 },
+      { "file": "ValueModel.java",   "lines": 18,  "classes": 1, "methods": 2, "constructors": 1, "lambdas": 0, "cyclomatic_complexity": 1 },
+      { "file": "EventEmitter.java", "lines": 21,  "classes": 1, "methods": 2, "constructors": 0, "lambdas": 0, "cyclomatic_complexity": 2 },
+      { "file": "EventListener.java","lines": 5,   "interfaces": 1, "methods": 1, "cyclomatic_complexity": 1 },
+      { "file": "HttpBinService.java","lines": 38, "classes": 1, "methods": 1, "constructors": 0, "lambdas": 0, "cyclomatic_complexity": 2 },
+      { "file": "ModelProperties.java","lines": 18,"enums": 1,  "enum_constants": 13, "cyclomatic_complexity": 1 },
+      { "file": "PocModel.java",     "lines": 49,  "classes": 1, "methods": 1, "constructors": 1, "lambdas": 0, "cyclomatic_complexity": 3 },
+      { "file": "ViewData.java",     "lines": 5,   "classes": 1, "methods": 0, "constructors": 0, "lambdas": 0, "cyclomatic_complexity": 1 },
+      { "file": "PocPresenter.java", "lines": 113, "classes": 1, "methods": 3, "constructors": 1, "lambdas": 3, "anonymous_classes": 1, "cyclomatic_complexity": 7 },
+      { "file": "PocView.java",      "lines": 203, "classes": 1, "methods": 2, "constructors": 1, "lambdas": 0, "ui_fields": 16, "cyclomatic_complexity": 1 }
+    ],
+    "javascript_files": [
+      { "file": "WebsocketServer.js","lines": 68, "event_handlers": 3, "global_vars": 3, "cyclomatic_complexity": 3 },
+      { "file": "main.js",           "lines": 8,  "cyclomatic_complexity": 1 }
+    ],
+    "vue_files": [
+      { "file": "App.vue",    "lines": 47,  "components": 1, "methods": 0, "cyclomatic_complexity": 1 },
+      { "file": "Search.vue", "lines": 258, "methods": 6, "watchers": 1, "props": 2, "data_fields": 6, "v_model_bindings": 19, "cyclomatic_complexity": 8 }
+    ],
+    "totals": {
+      "total_files": 14,
+      "total_lines": 874,
+      "total_java_classes": 8,
+      "total_java_interfaces": 1,
+      "total_java_enums": 1,
+      "total_vue_components": 3,
+      "total_design_patterns": 6
+    }
+  }
+}
