@@ -1,0 +1,96 @@
+openapi: 3.0.1
+info:
+  title: Allegro PoC
+  description: API documentation for the Allegro modernization PoC.
+  version: 1.0.0
+tags:
+  - name: Post
+servers:
+  - url: http://localhost:8080
+paths:
+  /post:
+    post:
+      tags:
+        - Post
+      summary: A simple Post resource returning what was sent.
+      description: Post
+      operationId: Post
+      requestBody:
+        $ref: '#/components/requestBodies/PostRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/PostResponse'
+      x-codegen-request-body-name: body
+
+components:
+  schemas:
+    PostObject:
+      type: object
+      properties:
+        FIRST_NAME:
+          type: string
+        LAST_NAME:
+          type: string
+        DATE_OF_BIRTH:
+          type: string
+        STREET:
+          type: string
+        BIC:
+          type: string
+        ORT:
+          type: string
+        ZIP:
+          type: string
+        FEMALE:
+          type: string
+        MALE:
+          type: string
+        DIVERSE:
+          type: string
+        IBAN:
+          type: string
+        VALID_FROM:
+          type: string
+        TEXT_AREA:
+          type: string
+    PostResponseObject:
+      type: object
+      properties:
+        args:
+          type: object
+        data:
+          type: string
+        files:
+          type: object
+        form:
+          type: object
+        headers:
+          type: object
+        json:
+          $ref: '#/components/schemas/PostObject'
+        origin:
+          type: string
+        url:
+          type: string
+        
+  responses:
+    PostResponse:
+      description: Post
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              postObject:
+                $ref: '#/components/schemas/PostObject'
+  requestBodies:
+    PostRequest:
+      required: true
+      description: Body for post request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              user:
+                $ref: '#/components/schemas/PostObject'
