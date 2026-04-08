@@ -1,0 +1,871 @@
+{
+  "assessment_metadata": {
+    "tool": "code-assessor",
+    "assessment_date": "2025-01-01T00:00:00Z",
+    "project": "Allegro PoC — Java Swing + Node.js WebSocket + Vue.js",
+    "note": "Target path was docs/analysis/code_quality_assessment.json — placed at repository root because docs/analysis/ directory did not exist at assessment time.",
+    "source_files_assessed": [
+      "websocket_swing/swing/src/main/java/com/Main.java",
+      "websocket_swing/swing/src/main/java/com/poc/ValueModel.java",
+      "websocket_swing/swing/src/main/java/com/poc/model/EventEmitter.java",
+      "websocket_swing/swing/src/main/java/com/poc/model/EventListener.java",
+      "websocket_swing/swing/src/main/java/com/poc/model/HttpBinService.java",
+      "websocket_swing/swing/src/main/java/com/poc/model/ModelProperties.java",
+      "websocket_swing/swing/src/main/java/com/poc/model/PocModel.java",
+      "websocket_swing/swing/src/main/java/com/poc/model/ViewData.java",
+      "websocket_swing/swing/src/main/java/com/poc/presentation/PocPresenter.java",
+      "websocket_swing/swing/src/main/java/com/poc/presentation/PocView.java",
+      "websocket_swing/node-server/src/WebsocketServer.js",
+      "websocket_swing/node-vue-client/src/App.vue",
+      "websocket_swing/node-vue-client/src/components/Search.vue",
+      "websocket_swing/node-vue-client/src/main.js",
+      "websocket_swing/api.yml",
+      "websocket_swing/pom.xml"
+    ],
+    "prior_analysis_consumed": [
+      "analysis_results.json",
+      "business_rules_extractor_analysis.json",
+      "ast_analysis.json"
+    ]
+  },
+
+  "project_summary": {
+    "code_complexity": 6,
+    "logic_complexity": 5,
+    "overall_quality_score": 4.2,
+    "maintainability_score": 3.5,
+    "testability_score": 2.0,
+    "security_score": 3.0,
+    "readability_score": 5.5,
+    "summary": "The Allegro PoC is a proof-of-concept application demonstrating modernization of a Java Swing desktop app using an MVP pattern, wired to a Node.js WebSocket broadcast server and a Vue.js web client. Being a PoC, the code contains numerous quality shortcuts that are acceptable for exploratory purposes but would require significant remediation before any production use. The most critical defects are: (1) a guaranteed NullPointerException in PocModel.action() when any form field is empty, (2) zero authentication/origin-validation on the WebSocket server allowing arbitrary clients to inject messages, and (3) resource leaks in HTTP connection handling. The overall architecture intent is sound — MVP in Java, message-bus via WebSocket, reactive frontend — but the implementation has 29 distinct quality issues spanning security, reliability, maintainability, and testing.",
+    "total_issues": 29,
+    "issues_by_criticality": {
+      "blocker_5": 2,
+      "severe_4": 6,
+      "normal_3": 9,
+      "minor_2": 8,
+      "trivial_1": 4
+    },
+    "total_technical_debt_hours": 62.5
+  },
+
+  "file_assessments": [
+
+    {
+      "file_path": "websocket_swing/swing/src/main/java/com/Main.java",
+      "language": "java",
+      "lines_of_code": 23,
+      "code_complexity": 1,
+      "logic_complexity": 1,
+      "overall_score": 5.0,
+      "issues": [
+        {
+          "id": "MAIN-001",
+          "line_number": 14,
+          "issue_type": "Code Structure",
+          "criticality": 2,
+          "message": "CountDownLatch(1) is created but its countDown() is never called; the application relies solely on JFrame.EXIT_ON_CLOSE to terminate the JVM, making the latch dead code that misleads readers into thinking it serves a purpose.",
+          "solution": "Remove the CountDownLatch entirely. Since PocView sets JFrame.EXIT_ON_CLOSE, the JVM will exit when the window closes. If the intent is to block non-GUI threads from exiting prematurely, document that intent explicitly. If a shutdown hook is needed in the future, use Runtime.getRuntime().addShutdownHook() or a proper application lifecycle framework. Removing the dead latch reduces cognitive load and eliminates the false signal that something counts it down.",
+          "estimated_time": 0.5
+        },
+        {
+          "id": "MAIN-002",
+          "line_number": 18,
+          "issue_type": "Readability",
+          "criticality": 1,
+          "message": "The unnamed variable pattern `var _ = new PocPresenter(...)` (Java 21 unnamed variable) discards the presenter reference, making it unclear whether the presenter is intentionally unretained or accidentally orphaned.",
+          "solution": "Assign the presenter to a named local variable even if it is not used after construction: `var presenter = new PocPresenter(pocView, pocModel, eventEmitter);`. This makes explicit that the object is created for its side effects (event wiring), documents that the variable is intentionally not used further, and prevents confusion for developers unfamiliar with the unnamed variable feature. Add a brief comment explaining the side-effect-only construction intent.",
+          "estimated_time": 0.5
+        },
+        {
+          "id": "MAIN-003",
+          "line_number": 12,
+          "issue_type": "Error Handling",
+          "criticality": 2,
+          "message": "`main()` declares `throws InterruptedException` but no code in the method actually throws it (the latch.await() could, but the latch is never counted down and its thread is the main thread). This adds unnecessary noise to the signature.",
+          "solution": "Either remove the `throws InterruptedException` declaration after removing the CountDownLatch (see MAIN-001), or wrap the latch.await() in a try-catch with a proper recovery action. Propagating checked exceptions from `main()` causes an opaque stack trace printed to stderr rather than a user-facing error dialog. If the application ever needs graceful shutdown handling, implement it via a WindowListener or Application lifecycle hook.",
+          "estimated_time": 0.5
+        }
+      ]
+    },
+
+    {
+      "file_path": "websocket_swing/swing/src/main/java/com/poc/ValueModel.java",
+      "language": "java",
+      "lines_of_code": 18,
+      "code_complexity": 1,
+      "logic_complexity": 1,
+      "overall_score": 5.5,
+      "issues": [
+        {
+          "id": "VM-001",
+          "line_number": 5,
+          "issue_type": "Naming Conventions",
+          "criticality": 2,
+          "message": "The field name `field` is too generic and provides no semantic context. `ValueModel<String>` with a field called `field` gives callers no hint about what value is being modelled.",
+          "solution": "Rename the internal field to `value` to match the class name's intent: `private T value;` with `getValue()` / `setValue()` accessors. This aligns with Java bean conventions and the standard pattern used by JavaFX `Property<T>`, Spring's `ObjectWrapper<T>`, and similar constructs. Update all call sites in PocModel and PocPresenter accordingly.",
+          "estimated_time": 1.0
+        },
+        {
+          "id": "VM-002",
+          "line_number": 3,
+          "issue_type": "Code Structure",
+          "criticality": 2,
+          "message": "ValueModel<T> lacks equals(), hashCode(), and toString() implementations, making debugging difficult and rendering instances useless in collections or comparisons.",
+          "solution": "Add @Override-annotated equals(), hashCode(), and toString() methods. Use Objects.equals() for null-safe comparison and Objects.hash() for hash computation. For toString(), return something like `ValueModel{value=\" + value + \"}`; this aids debugging, enables proper use in HashMap/HashSet, and makes log output meaningful. Modern IDEs can generate these three methods automatically.",
+          "estimated_time": 0.5
+        }
+      ]
+    },
+
+    {
+      "file_path": "websocket_swing/swing/src/main/java/com/poc/model/EventEmitter.java",
+      "language": "java",
+      "lines_of_code": 21,
+      "code_complexity": 2,
+      "logic_complexity": 2,
+      "overall_score": 5.0,
+      "issues": [
+        {
+          "id": "EE-001",
+          "line_number": 8,
+          "issue_type": "Performance",
+          "criticality": 3,
+          "message": "EventEmitter uses a plain ArrayList<EventListener> which is not thread-safe. Since Swing fires events on the EDT but HTTP responses arrive on a background thread, concurrent modification can cause ConcurrentModificationException or silent data corruption.",
+          "solution": "Replace ArrayList with CopyOnWriteArrayList<EventListener>, which provides thread-safe iteration without explicit synchronization: `private final List<EventListener> listeners = new CopyOnWriteArrayList<>()`. This is the standard pattern for observer lists that are read frequently and written infrequently. Alternatively, if thread-safety is not required, document that fact explicitly and ensure all emit() calls originate from the EDT via SwingUtilities.invokeLater().",
+          "estimated_time": 1.0
+        },
+        {
+          "id": "EE-002",
+          "line_number": 11,
+          "issue_type": "Maintainability",
+          "criticality": 2,
+          "message": "There is no `unsubscribe()` method, making it impossible to remove a listener once registered. This causes memory leaks in long-running scenarios where components are created and destroyed.",
+          "solution": "Add an `unsubscribe(EventListener listener)` method: `public void unsubscribe(EventListener listener) { listeners.remove(listener); }`. Callers that subscribe should call unsubscribe in their cleanup/dispose methods (e.g., when PocPresenter is destroyed). If using CopyOnWriteArrayList (see EE-001), removal is also thread-safe. Document the expected lifecycle in Javadoc.",
+          "estimated_time": 0.5
+        },
+        {
+          "id": "EE-003",
+          "line_number": 16,
+          "issue_type": "Error Handling",
+          "criticality": 3,
+          "message": "The emit() loop has no exception handling. If any listener's onEvent() throws a RuntimeException, subsequent listeners are silently skipped, causing partial event delivery with no diagnostic information.",
+          "solution": "Wrap each listener invocation in a try-catch: `try { listener.onEvent(eventData); } catch (Exception e) { logger.error(\"Listener threw exception during event dispatch\", e); }`. This ensures all listeners receive the event regardless of individual failures. Use a proper logger (SLF4J) rather than System.err. Consider also whether exceptions from listeners should propagate to the emitter caller or be swallowed.",
+          "estimated_time": 1.0
+        }
+      ]
+    },
+
+    {
+      "file_path": "websocket_swing/swing/src/main/java/com/poc/model/EventListener.java",
+      "language": "java",
+      "lines_of_code": 5,
+      "code_complexity": 1,
+      "logic_complexity": 1,
+      "overall_score": 6.0,
+      "issues": [
+        {
+          "id": "EL-001",
+          "line_number": 3,
+          "issue_type": "Naming Conventions",
+          "criticality": 2,
+          "message": "The interface name `EventListener` collides with the well-known `java.util.EventListener` marker interface in the JDK. Any class importing both will face an ambiguous name conflict.",
+          "solution": "Rename to a domain-specific name such as `PocEventListener`, `MessageListener`, or `WebSocketEventListener` to avoid the naming clash. Update all references in EventEmitter and PocPresenter. This prevents hard-to-diagnose import conflicts as the codebase grows and follows the Java convention of using descriptive, non-conflicting names for custom interfaces.",
+          "estimated_time": 1.0
+        }
+      ]
+    },
+
+    {
+      "file_path": "websocket_swing/swing/src/main/java/com/poc/model/HttpBinService.java",
+      "language": "java",
+      "lines_of_code": 38,
+      "code_complexity": 3,
+      "logic_complexity": 3,
+      "overall_score": 3.5,
+      "issues": [
+        {
+          "id": "HTTP-001",
+          "line_number": 11,
+          "issue_type": "Maintainability",
+          "criticality": 4,
+          "message": "The service endpoint URL is hardcoded as `http://localhost:8080`. This makes the application impossible to deploy to any non-local environment without source modification and recompilation.",
+          "solution": "Externalize configuration using a `config.properties` file loaded at startup: `String url = System.getProperty(\"service.url\", \"http://localhost:8080\");`. Pass the URL through the constructor instead: `public HttpBinService(String baseUrl) { this.baseUrl = baseUrl; }`. Read the property in Main.java and inject it. This follows the 12-factor app principle of storing config in the environment, enabling deployment across dev/test/prod without code changes.",
+          "estimated_time": 2.0
+        },
+        {
+          "id": "HTTP-002",
+          "line_number": 16,
+          "issue_type": "Maintainability",
+          "criticality": 3,
+          "message": "The method uses the legacy `HttpURLConnection` API from Java 1.1 instead of the modern `java.net.http.HttpClient` introduced in Java 11. The pom.xml targets Java 22, making this an unnecessary use of a deprecated approach.",
+          "solution": "Replace with `java.net.http.HttpClient`: `var client = HttpClient.newHttpClient(); var request = HttpRequest.newBuilder().uri(URI.create(url + path)).header(\"Content-Type\", \"application/json\").POST(HttpRequest.BodyPublishers.ofString(jsonBody)).build(); var response = client.send(request, HttpResponse.BodyHandlers.ofString());`. This provides better performance, async support, connection pooling, and HTTP/2 support. The HttpClient is also AutoCloseable, solving resource management.",
+          "estimated_time": 2.0
+        },
+        {
+          "id": "HTTP-003",
+          "line_number": 21,
+          "issue_type": "Error Handling",
+          "criticality": 4,
+          "message": "Resources `generator` (JsonGenerator) and `Scanner` are not closed in a try-finally or try-with-resources block. If an exception occurs between opening and closing, both the stream and the HTTP connection are leaked.",
+          "solution": "Wrap all I/O resources in try-with-resources blocks: `try (var os = connection.getOutputStream(); var generator = jsonGeneratorFactory.createGenerator(os)) { ... }` and `try (var scanner = new Scanner(connection.getInputStream())) { responseBody = scanner.useDelimiter(\"\\\\A\").next(); }`. Also call `connection.disconnect()` in a finally block. These changes guarantee resource cleanup even when exceptions are thrown, preventing file descriptor exhaustion under load.",
+          "estimated_time": 1.5
+        },
+        {
+          "id": "HTTP-004",
+          "line_number": 28,
+          "issue_type": "Error Handling",
+          "criticality": 3,
+          "message": "The HTTP response code is printed to stdout but never checked. If the server returns 4xx/5xx, `connection.getInputStream()` will throw an IOException (and `getErrorStream()` should be used instead), but there is no code to handle this case.",
+          "solution": "Check the response code after calling `getResponseCode()`: if `responseCode >= 200 && responseCode < 300`, read from `getInputStream()`; otherwise read from `getErrorStream()` and throw a domain-specific exception like `ServiceException(responseCode, errorBody)`. This prevents silent failures where the caller believes the operation succeeded when it actually failed with an HTTP error, and propagates actionable error information up to the presenter.",
+          "estimated_time": 1.5
+        },
+        {
+          "id": "HTTP-005",
+          "line_number": 30,
+          "issue_type": "Code Structure",
+          "criticality": 2,
+          "message": "System.out.println is used for response logging. This bypasses the application's logging infrastructure, cannot be configured per environment, and mixes debug output with normal output.",
+          "solution": "Introduce a proper logging framework: add SLF4J + Logback to pom.xml and replace System.out.println with `private static final Logger log = LoggerFactory.getLogger(HttpBinService.class);` then `log.debug(\"HTTP POST {} -> {}\", URL + PATH, responseCode);`. This enables log level control, structured logging, and log aggregation without code changes across environments.",
+          "estimated_time": 1.0
+        },
+        {
+          "id": "HTTP-006",
+          "line_number": 15,
+          "issue_type": "Code Structure",
+          "criticality": 2,
+          "message": "The method signature declares `throws InterruptedException` but no code in the method actually throws it. This leaks implementation details of a future planned change and forces all callers to handle an exception that never occurs.",
+          "solution": "Remove `InterruptedException` from the throws clause. If asynchronous HTTP is introduced later (e.g., using CompletableFuture with the Java 11 HttpClient), the exception handling strategy should be reconsidered at that time rather than pre-emptively polluting the current API. Keeping the throws clause clean reduces cognitive load on all callers.",
+          "estimated_time": 0.5
+        }
+      ]
+    },
+
+    {
+      "file_path": "websocket_swing/swing/src/main/java/com/poc/model/ModelProperties.java",
+      "language": "java",
+      "lines_of_code": 18,
+      "code_complexity": 1,
+      "logic_complexity": 1,
+      "overall_score": 4.5,
+      "issues": [
+        {
+          "id": "MP-001",
+          "line_number": 3,
+          "issue_type": "Code Structure",
+          "criticality": 3,
+          "message": "The enum conflates UI field identifiers (TEXT_AREA) with personal data fields (FIRST_NAME, LAST_NAME, …) with gender flags (FEMALE, MALE, DIVERSE). This single-responsibility violation makes it impossible to iterate only 'data fields' vs. 'gender options' without filtering.",
+          "solution": "Split into two enumerations: `PersonField` for data properties (FIRST_NAME, LAST_NAME, DATE_OF_BIRTH, etc.) and `GenderOption` for gender choices (FEMALE, MALE, DIVERSE). Remove TEXT_AREA from the field enum entirely, as it is a view artefact, not a data field. Update PocModel to use `Map<PersonField, ValueModel<String>>` for text data and a single `GenderOption selectedGender` field. This eliminates the Boolean gender hack and brings the model in line with domain semantics.",
+          "estimated_time": 3.0
+        }
+      ]
+    },
+
+    {
+      "file_path": "websocket_swing/swing/src/main/java/com/poc/model/PocModel.java",
+      "language": "java",
+      "lines_of_code": 49,
+      "code_complexity": 4,
+      "logic_complexity": 4,
+      "overall_score": 3.0,
+      "issues": [
+        {
+          "id": "PM-001",
+          "line_number": 39,
+          "issue_type": "Error Handling",
+          "criticality": 5,
+          "message": "BLOCKER: `model.get(val).getField().toString()` on line 39 calls toString() on the result of getField() which is initialised to `null` for every field. Any attempt to trigger action() before the user populates every single form field will throw a NullPointerException, crashing the submission silently (wrapped in RuntimeException by the presenter).",
+          "solution": "Guard the conversion with a null check: `String strVal = (val == ModelProperties.MALE || val == ModelProperties.FEMALE || val == ModelProperties.DIVERSE) ? String.valueOf(model.get(val).getField()) : Objects.toString(model.get(val).getField(), \"\");`. Additionally, implement a `validate()` method on PocModel that checks required fields and returns a list of validation errors. Call validate() at the start of action() and emit a validation-failure event instead of proceeding when required fields are missing. This prevents NPEs and gives the user meaningful feedback.",
+          "estimated_time": 2.0
+        },
+        {
+          "id": "PM-002",
+          "line_number": 12,
+          "issue_type": "Maintainability",
+          "criticality": 4,
+          "message": "The `model` field is declared `public`, exposing the entire internal EnumMap directly. Any code can replace entries, clear the map, or insert invalid keys, completely bypassing model logic.",
+          "solution": "Change the field to `private final Map<ModelProperties, ValueModel<?>> model`. Expose a type-safe accessor: `public <T> ValueModel<T> getProperty(ModelProperties key, Class<T> type) { return type.cast(model.get(key)); }` and a setter: `public void setProperty(ModelProperties key, Object value)`. This enforces encapsulation, enables future validation in the setter, and allows the model's internal representation to change without affecting callers.",
+          "estimated_time": 2.0
+        },
+        {
+          "id": "PM-003",
+          "line_number": 13,
+          "issue_type": "Maintainability",
+          "criticality": 3,
+          "message": "`httpBinService` is created via `new HttpBinService()` directly inside PocModel, tightly coupling the model to a specific implementation. This makes unit testing impossible without network access.",
+          "solution": "Extract an interface `PostService` with method `String post(Map<String, String> data) throws IOException` and inject it through the constructor: `public PocModel(EventEmitter emitter, PostService service)`. In production, pass `new HttpBinService(config.getServiceUrl())`. In tests, pass a mock or stub. This enables dependency injection, decouples transport from business logic, and makes the model independently testable.",
+          "estimated_time": 2.0
+        },
+        {
+          "id": "PM-004",
+          "line_number": 34,
+          "issue_type": "Business Logic",
+          "criticality": 3,
+          "message": "The action() method iterates over all ModelProperties values including TEXT_AREA and the three gender booleans, converting them all to strings without semantic meaning. The gender flags produce 'true'/'false'/'null' strings rather than a single gender value, and TEXT_AREA (a UI artefact) is included in the POST payload.",
+          "solution": "Separate data serialisation from model state. Build the payload explicitly: create a `PersonData` DTO with typed fields (`String firstName`, `String lastName`, `GenderOption gender`, etc.), populate it from the model, then serialise the DTO to JSON. Exclude TEXT_AREA from the payload. Represent gender as a single string field ('FEMALE', 'MALE', 'DIVERSE') rather than three boolean flags. This matches the semantics expected by any real backend and aligns with the OpenAPI spec.",
+          "estimated_time": 3.0
+        }
+      ]
+    },
+
+    {
+      "file_path": "websocket_swing/swing/src/main/java/com/poc/model/ViewData.java",
+      "language": "java",
+      "lines_of_code": 5,
+      "code_complexity": 0,
+      "logic_complexity": 0,
+      "overall_score": 2.0,
+      "issues": [
+        {
+          "id": "VD-001",
+          "line_number": 3,
+          "issue_type": "Code Structure",
+          "criticality": 2,
+          "message": "ViewData.java is an empty class body with no fields, methods, or documentation. It is unused anywhere in the codebase and represents dead placeholder code.",
+          "solution": "Either delete the file entirely if it was a placeholder that is no longer needed, or implement it with its intended purpose: a DTO carrying view-layer state between the model and presenter. If the modernization design calls for a ViewData transfer object, add the relevant fields (form content, validation messages, display state) and document the design intent with Javadoc. Dead code increases maintenance burden and confuses developers trying to understand the codebase.",
+          "estimated_time": 0.5
+        }
+      ]
+    },
+
+    {
+      "file_path": "websocket_swing/swing/src/main/java/com/poc/presentation/PocPresenter.java",
+      "language": "java",
+      "lines_of_code": 113,
+      "code_complexity": 6,
+      "logic_complexity": 5,
+      "overall_score": 4.0,
+      "issues": [
+        {
+          "id": "PP-001",
+          "line_number": 25,
+          "issue_type": "Code Structure",
+          "criticality": 4,
+          "message": "The presenter accesses view internals directly via public/protected field access (`view.textArea`, `view.firstName`, `view.name`, etc.). This violates the MVP contract where the View should expose behaviour through an interface, not raw Swing components.",
+          "solution": "Define a `PocViewContract` interface with methods like `void setResponseText(String text)`, `void clearFormFields()`, `String getFirstName()`, etc. Have PocView implement the interface and replace the direct field access in PocPresenter with interface method calls. This decouples presenter from Swing, makes PocPresenter independently unit-testable with a mock view, and allows the view implementation to change without touching the presenter.",
+          "estimated_time": 3.0
+        },
+        {
+          "id": "PP-002",
+          "line_number": 43,
+          "issue_type": "Error Handling",
+          "criticality": 3,
+          "message": "Both IOException and InterruptedException caught in the button action listener are re-thrown as `RuntimeException(e)`. This swallows the exception with no user feedback — the Swing action listener will silently fail and the user will not know the POST request failed.",
+          "solution": "Implement user-facing error handling: catch the exceptions, log them with a proper logger (`log.error(\"Failed to submit form\", e)`), and display an error dialog: `JOptionPane.showMessageDialog(view.frame, \"Submission failed: \" + e.getMessage(), \"Error\", JOptionPane.ERROR_MESSAGE)`. This gives users actionable feedback and prevents silent failures. Also set the interrupt flag if catching InterruptedException: `Thread.currentThread().interrupt()`.",
+          "estimated_time": 1.5
+        },
+        {
+          "id": "PP-003",
+          "line_number": 58,
+          "issue_type": "Code Structure",
+          "criticality": 3,
+          "message": "The `insertUpdate` and `removeUpdate` handlers in the DocumentListener anonymous class are nearly identical, duplicating 6 lines each. The `removeUpdate` handler also re-fetches the model redundantly from `PocPresenter.this.model.model.get(prop)` when it already has `model` in scope.",
+          "solution": "Extract the document update logic into a private helper method: `private void updateModelFromDocument(DocumentEvent e, ValueModel<String> model) { try { model.setField(e.getDocument().getText(0, e.getDocument().getLength())); } catch (BadLocationException ex) { log.error(\"Failed to read document content\", ex); } }` and call it from both handlers. Remove the redundant second model lookup in removeUpdate. This reduces code duplication, simplifies maintenance, and eliminates the inconsistency.",
+          "estimated_time": 1.0
+        },
+        {
+          "id": "PP-004",
+          "line_number": 62,
+          "issue_type": "Code Structure",
+          "criticality": 2,
+          "message": "Debug System.out.println statements are present throughout: 'I am in insert update.', 'I am in remove update.', and `System.out.println(source.isSelected())`. These produce noisy output in all environments and were clearly intended as development traces.",
+          "solution": "Remove all debug println statements. If tracing document changes is valuable for diagnostics, replace with `log.trace(\"Field {} updated: {}\", prop, content)` using SLF4J at TRACE level, which can be enabled per environment via logging configuration. This keeps the diagnostic capability available without polluting standard output in normal operation.",
+          "estimated_time": 0.5
+        },
+        {
+          "id": "PP-005",
+          "line_number": 23,
+          "issue_type": "Code Structure",
+          "criticality": 3,
+          "message": "The event subscription lambda that updates the view (resetting all form fields) runs on whichever thread emits the event. If the emit comes from an HTTP response callback thread, all Swing component updates (`setText`, `setSelected`) will occur off the EDT, violating Swing's single-thread rule and causing potential rendering corruption.",
+          "solution": "Wrap all view mutations in the event listener with `SwingUtilities.invokeLater(...)`: `eventEmitter.subscribe(eventData -> SwingUtilities.invokeLater(() -> { view.textArea.setText(eventData); view.firstName.setText(\"\"); ... }))`. This guarantees thread safety for Swing component updates regardless of which thread emits the event, following the canonical Swing threading model.",
+          "estimated_time": 1.0
+        }
+      ]
+    },
+
+    {
+      "file_path": "websocket_swing/swing/src/main/java/com/poc/presentation/PocView.java",
+      "language": "java",
+      "lines_of_code": 203,
+      "code_complexity": 3,
+      "logic_complexity": 2,
+      "overall_score": 4.5,
+      "issues": [
+        {
+          "id": "PV-001",
+          "line_number": 188,
+          "issue_type": "Code Structure",
+          "criticality": 4,
+          "message": "The `textArea` component is added to the panel TWICE: `panel.add(textArea)` on line 188 (without constraints) followed immediately by `panel.add(textArea, c)` on line 189 with GridBagConstraints. Adding a Swing component twice removes it from its first position and re-adds it at the second — the first add is dead code that will confuse layout debugging.",
+          "solution": "Remove the duplicate `panel.add(textArea)` call on line 188, leaving only the correct constrained `panel.add(textArea, c)` on line 189. After removing the duplicate, verify the textArea renders correctly at its intended grid position (gridx=1, gridy=4, gridwidth=6). Add a comment explaining the large gridwidth span for future maintainers.",
+          "estimated_time": 0.5
+        },
+        {
+          "id": "PV-002",
+          "line_number": 8,
+          "issue_type": "Code Structure",
+          "criticality": 3,
+          "message": "All UI component fields are `protected`, granting subclass and same-package access to raw Swing components. The presenter accesses them directly by field name, which breaks MVP encapsulation and means any change to a field name or type breaks the presenter.",
+          "solution": "Change all fields to `private` and expose them through typed accessor methods defined in a `PocViewContract` interface: `void setResponseText(String text)`, `void setFirstName(String name)`, `String getFirstName()`, etc. This enforces encapsulation, allows the view to evolve internally without breaking the presenter, and makes the view independently testable by substituting a mock implementation of the interface.",
+          "estimated_time": 3.0
+        },
+        {
+          "id": "PV-003",
+          "line_number": 179,
+          "issue_type": "Readability",
+          "criticality": 2,
+          "message": "The label 'RT' (line 179) has no explanation and is not a standard abbreviation recognisable in the domain context of the Allegro system. A developer must trace what component is added below it to understand what RT means.",
+          "solution": "Replace 'RT' with a descriptive label such as 'Antwort' (German: Response/Answer) or 'Rückmeldung' (Feedback) to match the German language convention already used in other labels (Vorname, Geburtsdatum, Strasse, PLZ). Consistency in language and clarity in label text improve both developer comprehension and the end-user experience.",
+          "estimated_time": 0.5
+        }
+      ]
+    },
+
+    {
+      "file_path": "websocket_swing/node-server/src/WebsocketServer.js",
+      "language": "javascript",
+      "lines_of_code": 68,
+      "code_complexity": 3,
+      "logic_complexity": 2,
+      "overall_score": 3.5,
+      "issues": [
+        {
+          "id": "WS-001",
+          "line_number": 32,
+          "issue_type": "Security",
+          "criticality": 5,
+          "message": "BLOCKER: `request.accept(null, request.origin)` accepts ALL WebSocket connections from ANY origin with no validation whatsoever. Any script on any webpage can connect to this server and inject arbitrary messages to all connected clients.",
+          "solution": "Implement origin allowlisting: `const ALLOWED_ORIGINS = ['http://localhost:8080', 'http://localhost:8081']; if (!ALLOWED_ORIGINS.includes(request.origin)) { request.reject(); return; }`. Additionally, add authentication via a token in the WebSocket connection URL or subprotocol header. For production, implement JWT validation on connection upgrade. At minimum, document the accepted origins for the PoC context and reject all others. The current unrestricted accept is a critical cross-site WebSocket hijacking (CSWSH) vulnerability.",
+          "estimated_time": 2.0
+        },
+        {
+          "id": "WS-002",
+          "line_number": 6,
+          "issue_type": "Performance",
+          "criticality": 3,
+          "message": "The `messages` array is populated with incoming messages but never read, queried, or cleared. It grows without bound for the lifetime of the process, constituting an unbounded memory leak.",
+          "solution": "Remove the `messages` array entirely if message history is not needed. If message persistence or replay is a future requirement, implement it with a bounded circular buffer (e.g., keep last 100 messages) or an external store (Redis, database). For the PoC, simply remove `var messages = []` and any push calls to it. This eliminates the memory leak and removes dead code.",
+          "estimated_time": 0.5
+        },
+        {
+          "id": "WS-003",
+          "line_number": 1,
+          "issue_type": "Code Structure",
+          "criticality": 2,
+          "message": "The entire file uses `var` declarations (ES5 style) instead of `const`/`let` (ES6+). Node.js has supported `const`/`let` since v6 and the PoC has no transpilation requirements that would prevent their use.",
+          "solution": "Replace all `var` with `const` for values that are never reassigned (`webSocketsServerPort`, `server`, `wsServer`) and `let` for loop indices and the `index` variable. This eliminates accidental variable hoisting, makes the scoping intent explicit, and prevents re-declaration bugs. Modern JavaScript linters (ESLint) will enforce this convention automatically.",
+          "estimated_time": 0.5
+        },
+        {
+          "id": "WS-004",
+          "line_number": 62,
+          "issue_type": "Error Handling",
+          "criticality": 3,
+          "message": "The `close` event handler parameter is named `connection` but the WebSocket library actually passes `(reasonCode, description)` as parameters. The shadowing of the outer `connection` variable inside the close handler produces misleading code where `connection.remoteAddress` silently resolves to `undefined`.",
+          "solution": "Fix the close handler signature to match the actual API: `connection.on('close', (reasonCode, description) => { console.log(`${new Date()} Peer disconnected. Code: ${reasonCode}`); clients.splice(index, 1); });`. This corrects the misleading parameter name and produces accurate log output showing the disconnect reason code. Verify against the websocket npm package documentation for the exact parameters.",
+          "estimated_time": 0.5
+        },
+        {
+          "id": "WS-005",
+          "line_number": 55,
+          "issue_type": "Error Handling",
+          "criticality": 3,
+          "message": "The broadcast loop calls `clients[i].sendUTF(json)` with no error handling. If any client send fails (e.g., broken connection not yet cleaned up), the exception will crash the entire message handler, causing the server to lose the message for all subsequent clients in the list.",
+          "solution": "Wrap each send in a try-catch: `try { clients[i].sendUTF(json); } catch (e) { console.error('Failed to send to client', i, e); }`. Alternatively, use the callback form: `clients[i].sendUTF(json, err => { if (err) { console.error('Send error', err); clients.splice(i, 1); } })`. This ensures one bad client does not disrupt delivery to healthy clients and stale connections are cleaned up proactively.",
+          "estimated_time": 1.0
+        }
+      ]
+    },
+
+    {
+      "file_path": "websocket_swing/node-vue-client/src/App.vue",
+      "language": "vue",
+      "lines_of_code": 47,
+      "code_complexity": 1,
+      "logic_complexity": 1,
+      "overall_score": 6.0,
+      "issues": [
+        {
+          "id": "APP-001",
+          "line_number": 7,
+          "issue_type": "Code Structure",
+          "criticality": 2,
+          "message": "The `content_textarea` prop is passed a hardcoded string literal `\"Search Mock\"`. Prop names using underscores (`content_textarea`) violate Vue's camelCase convention for prop binding, and passing a static string as a prop rather than a meaningful default suggests the prop design is incomplete.",
+          "solution": "Rename the prop from `content_textarea` to `initialTextareaContent` following Vue camelCase conventions. Pass a meaningful default via the component's `props` definition: `initialTextareaContent: { type: String, default: '' }`. Remove the static value from the template. If the textarea is purely internal state, remove the prop entirely and initialise the data property with an empty string. This follows Vue best practices for prop design.",
+          "estimated_time": 0.5
+        }
+      ]
+    },
+
+    {
+      "file_path": "websocket_swing/node-vue-client/src/components/Search.vue",
+      "language": "vue",
+      "lines_of_code": 258,
+      "code_complexity": 6,
+      "logic_complexity": 6,
+      "overall_score": 3.5,
+      "issues": [
+        {
+          "id": "SV-001",
+          "line_number": 132,
+          "issue_type": "Maintainability",
+          "criticality": 4,
+          "message": "The WebSocket URL `ws://localhost:1337/` is hardcoded directly in the component. This makes the application impossible to deploy to any non-local environment without source modification, and the unencrypted `ws://` scheme is insecure for production use.",
+          "solution": "Move the WebSocket URL to a Vue environment variable: create `.env.development` with `VUE_APP_WS_URL=ws://localhost:1337/` and `.env.production` with `VUE_APP_WS_URL=wss://yourserver.com/ws`. Reference it in code as `process.env.VUE_APP_WS_URL`. This follows Vue CLI's environment variable convention, enables environment-specific configuration without code changes, and documents the dependency explicitly.",
+          "estimated_time": 1.5
+        },
+        {
+          "id": "SV-002",
+          "line_number": 103,
+          "issue_type": "Business Logic",
+          "criticality": 4,
+          "message": "The `zahlungsempfaenger_selected` data property is initialised as an empty string (`\"\"`) but is subsequently used as an object (accessing `.iban` in the template and being assigned an object in `zahlungsempfaengerSelected()`). This type inconsistency causes the initial template render to attempt `.iban` on a string, producing undefined output.",
+          "solution": "Initialise `zahlungsempfaenger_selected` as `null` or an empty object: `zahlungsempfaenger_selected: null`. Add a guard in the template and in `sendMessage`: `if (!this.zahlungsempfaenger_selected) { alert('Bitte Zahlungsempfänger auswählen'); return; }`. This prevents type confusion, enables explicit null-checking before send, and provides user feedback when they attempt to transfer without selecting payment details.",
+          "estimated_time": 1.0
+        },
+        {
+          "id": "SV-003",
+          "line_number": 133,
+          "issue_type": "Error Handling",
+          "criticality": 3,
+          "message": "The WebSocket `connect()` method creates the socket but has no `onerror` handler and no reconnection logic. If the WebSocket server is not running, the user receives no feedback and the `sendMessage()` call will throw an unhandled exception.",
+          "solution": "Add error and reconnection handling: `this.socket.onerror = (err) => { this.status = 'error'; console.error('WebSocket error', err); }; this.socket.onclose = () => { this.status = 'disconnected'; setTimeout(() => this.connect(), 3000); }`. Display the status to the user in the template with a connection indicator. Implement exponential backoff for reconnection attempts. Guard `sendMessage()` with a readyState check: `if (this.socket.readyState !== WebSocket.OPEN) { console.warn('Socket not open'); return; }`.",
+          "estimated_time": 2.0
+        },
+        {
+          "id": "SV-004",
+          "line_number": 140,
+          "issue_type": "Error Handling",
+          "criticality": 3,
+          "message": "The `disconnect()` method references `this.logs` and `this.status` which are never declared in the `data()` function. This will silently create reactive properties at runtime (Vue 2 does not warn on implicit property creation), leading to unpredictable reactivity behaviour.",
+          "solution": "Add the missing properties to `data()`: `status: 'disconnected', logs: []`. Initialise `status` with 'disconnected' before the socket opens in `connect()`. The `logs` array should receive push entries when messages are received, providing a UI-level audit trail. This makes all reactive state explicit and visible, preventing Vue 2's silent property injection and making the component state self-documenting.",
+          "estimated_time": 1.0
+        },
+        {
+          "id": "SV-005",
+          "line_number": 104,
+          "issue_type": "Business Logic",
+          "criticality": 3,
+          "message": "The `search_space` array with 5 hardcoded mock persons (including real-looking IBAN and BIC codes) is embedded directly inside the component's `data()` function. This mixes static test data with component logic, and real-looking financial identifiers in source code pose a data governance risk.",
+          "solution": "Extract the mock data to a separate file `src/mock/persons.js` that is only imported in development builds: `import { mockPersons } from '@/mock/persons'; search_space: process.env.NODE_ENV === 'production' ? [] : mockPersons`. Use realistic but clearly fake IBANs (e.g., with country code 'XX'). In production, replace with an API call to a search endpoint. This separates concerns, makes the mock data removable for production, and documents the test-data intent clearly.",
+          "estimated_time": 2.0
+        },
+        {
+          "id": "SV-006",
+          "line_number": 173,
+          "issue_type": "Performance",
+          "criticality": 3,
+          "message": "The `watch` on `internal_content_textarea` fires `sendMessage()` on every single keystroke in the textarea. This means every character typed sends a WebSocket message, producing extreme message volume for normal typing and potential server flooding.",
+          "solution": "Implement debouncing to delay the send until typing pauses: `import { debounce } from 'lodash-es'; watch: { internal_content_textarea: debounce(function(val) { this.sendMessage(val, 'textarea'); }, 300) }`. Alternatively, replace the watcher with a button-triggered send. Using a 300ms debounce reduces message volume by 10-20x for typical typing speed, significantly reducing WebSocket traffic and server load.",
+          "estimated_time": 1.0
+        },
+        {
+          "id": "SV-007",
+          "line_number": 33,
+          "issue_type": "Code Structure",
+          "criticality": 2,
+          "message": "The HTML `<table>` elements use the deprecated `cellpadding=4` attribute (line 33). This was valid in HTML4 but is invalid in HTML5 and will generate validation errors. Modern browsers still render it but it should be handled with CSS.",
+          "solution": "Remove the `cellpadding` attribute from both tables and add equivalent CSS: `td { padding: 4px; }` in the scoped style block. This brings the template into HTML5 compliance, consolidates styling in the CSS layer (separation of concerns), and ensures consistent rendering across current and future browsers that may drop legacy HTML4 attribute support.",
+          "estimated_time": 0.5
+        },
+        {
+          "id": "SV-008",
+          "line_number": 243,
+          "issue_type": "Code Structure",
+          "criticality": 1,
+          "message": "The CSS rule `div#person input { align: left; }` uses the invalid CSS property `align`. The correct property is `text-align: left`.",
+          "solution": "Replace `align: left` with `text-align: left`. While browsers silently ignore invalid CSS properties, this is a correctness issue that will flag in CSS validators and linters. Run the project through a CSS linter (Stylelint) to catch similar issues systematically rather than fixing them one-by-one.",
+          "estimated_time": 0.5
+        }
+      ]
+    },
+
+    {
+      "file_path": "websocket_swing/node-vue-client/src/main.js",
+      "language": "javascript",
+      "lines_of_code": 8,
+      "code_complexity": 1,
+      "logic_complexity": 1,
+      "overall_score": 7.0,
+      "issues": []
+    },
+
+    {
+      "file_path": "websocket_swing/api.yml",
+      "language": "yaml",
+      "lines_of_code": 97,
+      "code_complexity": 2,
+      "logic_complexity": 2,
+      "overall_score": 4.5,
+      "issues": [
+        {
+          "id": "API-001",
+          "line_number": 44,
+          "issue_type": "Business Logic",
+          "criticality": 3,
+          "message": "The OpenAPI spec defines FEMALE, MALE, and DIVERSE as `type: string` fields, but the Java model stores them as `ValueModel<Boolean>`. This type mismatch means the generated API contract is inconsistent with the actual implementation, causing schema validation failures if a client validates against the spec.",
+          "solution": "Redesign the gender representation. In the spec, replace the three boolean fields with a single `GENDER` field using an enum schema: `GENDER: { type: string, enum: [FEMALE, MALE, DIVERSE] }`. Update the Java model accordingly (see MP-001 recommendation). This produces a spec and implementation that agree, enables proper client SDK generation, and represents gender correctly as a categorical choice rather than three overlapping booleans.",
+          "estimated_time": 1.5
+        },
+        {
+          "id": "API-002",
+          "line_number": 33,
+          "issue_type": "Code Structure",
+          "criticality": 2,
+          "message": "No fields in the PostObject schema are marked as `required`. This means a client can send a completely empty request body and the spec claims it is valid. Required fields and field formats (e.g., `format: date` for DATE_OF_BIRTH, `format: iban` for IBAN) are absent.",
+          "solution": "Add a `required` array to PostObject listing mandatory fields: `required: [FIRST_NAME, LAST_NAME, DATE_OF_BIRTH]`. Add format annotations where applicable: `DATE_OF_BIRTH: { type: string, format: date }`, `IBAN: { type: string, pattern: '^[A-Z]{2}[0-9]{2}[A-Z0-9]{4}[0-9]{7}([A-Z0-9]?){0,16}$' }`. This enables automatic validation in OpenAPI-aware frameworks and clearly documents the contract for API consumers.",
+          "estimated_time": 1.5
+        },
+        {
+          "id": "API-003",
+          "line_number": 8,
+          "issue_type": "Security",
+          "criticality": 2,
+          "message": "The API spec defines no security schemes. There is no authentication, API key, or OAuth2 definition, meaning the spec communicates to all consumers that the API is open to anonymous access.",
+          "solution": "Add a security scheme definition appropriate for the context: for PoC, at minimum add `securitySchemes: { BasicAuth: { type: http, scheme: basic } }` and reference it in the operation. For production, define a bearer token scheme: `BearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }`. Apply it to the POST /post operation. This documents the security intent and prepares the spec for implementation.",
+          "estimated_time": 1.0
+        },
+        {
+          "id": "API-004",
+          "line_number": 9,
+          "issue_type": "Maintainability",
+          "criticality": 2,
+          "message": "The server URL is hardcoded as `http://localhost:8080` in the spec. This means any spec-driven tooling (mock servers, generated clients) defaults to localhost, and the spec cannot express the production server URL.",
+          "solution": "Add multiple server entries: `servers: [ { url: 'http://localhost:8080', description: 'Local development' }, { url: 'https://api.example.com', description: 'Production' } ]`. Use server variables for environment-specific configuration. This allows OpenAPI tooling to target the correct environment and documents the deployment topology in the spec.",
+          "estimated_time": 0.5
+        }
+      ]
+    },
+
+    {
+      "file_path": "websocket_swing/pom.xml",
+      "language": "xml",
+      "lines_of_code": 66,
+      "code_complexity": 1,
+      "logic_complexity": 1,
+      "overall_score": 4.0,
+      "issues": [
+        {
+          "id": "POM-001",
+          "line_number": 17,
+          "issue_type": "Maintainability",
+          "criticality": 3,
+          "message": "Three Tyrus WebSocket client dependencies (websocket-api:0.2, tyrus-standalone-client:1.15, tyrus-websocket-core:1.2.1) are declared with inconsistent versions. tyrus-websocket-core is at 1.2.1 while other Tyrus artefacts are at 1.15 — a 12-version gap indicating these were added at different times without coordination.",
+          "solution": "Define a `<properties>` block with `<tyrus.version>1.20</tyrus.version>` (latest stable) and reference it in all Tyrus dependency versions: `<version>${tyrus.version}</version>`. Use a BOM (Bill of Materials) if available: `<dependencyManagement><dependency><groupId>org.glassfish.tyrus</groupId><artifactId>tyrus-bom</artifactId><version>${tyrus.version}</version><type>pom</type><scope>import</scope></dependency></dependencyManagement>`. This ensures all Tyrus components are on the same version and simplifies upgrades.",
+          "estimated_time": 1.5
+        },
+        {
+          "id": "POM-002",
+          "line_number": 10,
+          "issue_type": "Code Structure",
+          "criticality": 3,
+          "message": "The pom.xml includes four WebSocket-related dependencies (Tyrus client, Tyrus core, Tyrus SPI, WebSocket API) but there is no Java WebSocket client code anywhere in the codebase. These are dead dependencies that increase the build artifact size and introduce unnecessary vulnerability surface area.",
+          "solution": "Remove all Tyrus dependencies until Java WebSocket client code is actually implemented. When the WebSocket client is added, introduce only the minimal required dependency (likely just `tyrus-standalone-client` in the correct version). Keeping unused dependencies violates the principle of minimal dependency footprint and means every dependency vulnerability scanner will flag these artefacts unnecessarily.",
+          "estimated_time": 0.5
+        },
+        {
+          "id": "POM-003",
+          "line_number": 54,
+          "issue_type": "Code Structure",
+          "criticality": 3,
+          "message": "There is no `<mainClass>` configuration in the Maven build. Running `java -jar` on the produced JAR will fail with 'no main manifest attribute'. There is also no assembly or shade plugin to produce a fat JAR with all dependencies.",
+          "solution": "Add the maven-jar-plugin with manifest configuration: `<plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-jar-plugin</artifactId><configuration><manifest><mainClass>com.Main</mainClass></manifest></configuration></plugin>`. For a self-contained distributable JAR, add the maven-shade-plugin to bundle all dependencies. This enables `java -jar websocket_swing.jar` to work out of the box.",
+          "estimated_time": 1.0
+        },
+        {
+          "id": "POM-004",
+          "line_number": 9,
+          "issue_type": "Testing",
+          "criticality": 3,
+          "message": "There are no test dependencies (JUnit, Mockito, AssertJ, etc.) in pom.xml, making it structurally impossible to write or run unit tests for the Java module. This is consistent with the complete absence of any test source files.",
+          "solution": "Add JUnit 5 and Mockito to pom.xml: `<dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><version>5.11.0</version><scope>test</scope></dependency>` and `<dependency><groupId>org.mockito</groupId><artifactId>mockito-core</artifactId><version>5.12.0</version><scope>test</scope></dependency>`. Also add the surefire plugin configured for JUnit 5. This is the foundational step enabling any testing at all.",
+          "estimated_time": 1.0
+        }
+      ]
+    }
+  ],
+
+  "enhancements": [
+    {
+      "title": "Introduce a View Interface to Enforce Proper MVP Contract",
+      "description": "Refactor the presenter-view relationship to use a `PocViewContract` interface that PocView implements. Currently, PocPresenter accesses Swing component fields directly, tightly coupling the presentation layer to the Swing implementation. Standardize the MVP boundary by defining explicit contract methods on the interface (setResponseText, clearForm, showError, getFormData, addSubmitListener). This decouples the presenter from Swing, makes PocPresenter independently unit-testable with a mock view, and allows the view implementation to be swapped (e.g., migrated to JavaFX or a REST API form) without touching the presenter. Modularize the layers so each can evolve and be tested in isolation.",
+      "example": "// Define the contract:\npublic interface PocViewContract {\n    void setResponseText(String text);\n    void clearFormFields();\n    PersonFormData getFormData();\n    void showError(String message);\n    void addSubmitListener(Runnable onSubmit);\n}\n\n// PocView implements it:\npublic class PocView implements PocViewContract {\n    private JTextArea textArea = new JTextArea();\n    // ... other private fields\n\n    @Override\n    public void setResponseText(String text) {\n        SwingUtilities.invokeLater(() -> textArea.setText(text));\n    }\n\n    @Override\n    public void clearFormFields() {\n        SwingUtilities.invokeLater(() -> {\n            firstName.setText(\"\");\n            name.setText(\"\");\n            // ...\n        });\n    }\n}\n\n// PocPresenter only knows the interface:\npublic class PocPresenter {\n    public PocPresenter(PocViewContract view, PocModel model, EventEmitter emitter) {\n        emitter.subscribe(data -> view.setResponseText(data));\n        view.addSubmitListener(() -> model.action());\n    }\n}",
+      "priority": 5
+    },
+    {
+      "title": "Externalize All Configuration via Properties File",
+      "description": "Orchestrate configuration management by extracting all hardcoded values (HTTP endpoint URL, WebSocket server port, WebSocket client URL) into a single `application.properties` file loaded at startup. Both the Java application and the Node.js server currently have environment-specific values baked into source code. Standardize configuration loading using `java.util.Properties` in the Java app and `dotenv` in Node.js. Provide separate property files per environment (application-dev.properties, application-prod.properties). This follows the 12-factor app principle, enables deployment to multiple environments without recompilation or code changes, and consolidates all configurable values into one discoverable location.",
+      "example": "# application.properties (Java):\nservice.url=http://localhost:8080\nwebsocket.server.url=ws://localhost:1337/\n\n// Java loading:\nProperties props = new Properties();\ntry (InputStream is = Main.class.getResourceAsStream(\"/application.properties\")) {\n    props.load(is);\n}\nString serviceUrl = props.getProperty(\"service.url\", \"http://localhost:8080\");\nvar model = new PocModel(emitter, new HttpBinService(serviceUrl));\n\n# .env (Node.js):\nWS_PORT=1337\nALLOWED_ORIGINS=http://localhost:8080,http://localhost:5173\n\n// Node.js loading:\nrequire('dotenv').config();\nconst port = process.env.WS_PORT || 1337;\nconst allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',');\n\n<!-- Vue .env.development -->\nVUE_APP_WS_URL=ws://localhost:1337/",
+      "priority": 5
+    },
+    {
+      "title": "Add a Comprehensive Unit and Integration Test Suite",
+      "description": "The codebase has zero test coverage across all three modules. Standardize quality assurance by introducing: JUnit 5 + Mockito for the Java module (test PocModel business logic, HttpBinService serialization, EventEmitter dispatch), Jest for the Vue.js module (test Search.vue search logic, WebSocket message handling, sendMessage payload construction), and Mocha/Chai for the Node.js server (test connection handling, broadcast logic, origin rejection). This addresses the most significant technical debt in the project. Start with unit tests for the most critical paths: PocModel.action() null safety, searchPerson() filter logic, and WebSocket broadcast correctness. Modularize tests to mirror the source structure.",
+      "example": "// Java - PocModel unit test:\n@ExtendWith(MockitoExtension.class)\nclass PocModelTest {\n    @Mock PostService postService;\n    @Mock EventEmitter emitter;\n\n    @Test\n    void action_shouldThrowValidation_whenRequiredFieldsNull() {\n        var model = new PocModel(emitter, postService);\n        assertThrows(ValidationException.class, model::action);\n        verifyNoInteractions(postService);\n    }\n\n    @Test\n    void action_shouldEmitResponse_whenPostSucceeds() throws Exception {\n        var model = new PocModel(emitter, postService);\n        model.setProperty(ModelProperties.FIRST_NAME, \"Hans\");\n        // ... set all required fields\n        when(postService.post(any())).thenReturn(\"{\\\"status\\\":\\\"ok\\\"}\");\n        model.action();\n        verify(emitter).emit(\"{\\\"status\\\":\\\"ok\\\"}\");\n    }\n}\n\n// Vue - Search.vue unit test (Jest):\ntest('searchPerson returns matching results by last name', () => {\n    const wrapper = shallowMount(Search);\n    wrapper.setData({ formdata: { last: 'Mayer' } });\n    wrapper.vm.searchPerson();\n    expect(wrapper.vm.search_result).toHaveLength(1);\n    expect(wrapper.vm.search_result[0].name).toBe('Mayer');\n});",
+      "priority": 5
+    },
+    {
+      "title": "Implement Structured Logging with SLF4J and Logback",
+      "description": "Replace all System.out.println calls throughout the Java codebase with structured logging using SLF4J as the logging facade and Logback as the implementation. Currently there are 8+ println calls across HttpBinService, PocModel, and PocPresenter producing unstructured console output with no timestamps, log levels, or filtering capability. Standardize logging by adding SLF4J + Logback to pom.xml, creating a logback.xml configuration, and replacing every println with the appropriate log level call. This enables environment-specific log verbosity control, structured JSON log output for log aggregation tools, and correlation IDs for tracing requests end-to-end.",
+      "example": "// pom.xml additions:\n<dependency>\n    <groupId>org.slf4j</groupId>\n    <artifactId>slf4j-api</artifactId>\n    <version>2.0.13</version>\n</dependency>\n<dependency>\n    <groupId>ch.qos.logback</groupId>\n    <artifactId>logback-classic</artifactId>\n    <version>1.5.6</version>\n</dependency>\n\n// HttpBinService - before:\nSystem.out.println(\"Response code: \" + responseCode);\n\n// HttpBinService - after:\nprivate static final Logger log = LoggerFactory.getLogger(HttpBinService.class);\nlog.info(\"POST {} -> HTTP {}\", URL + PATH, responseCode);\nlog.debug(\"Response body: {}\", responseBody);\n\n// logback.xml:\n<configuration>\n  <appender name=\"CONSOLE\" class=\"ch.qos.logback.core.ConsoleAppender\">\n    <encoder>\n      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>\n    </encoder>\n  </appender>\n  <root level=\"INFO\"><appender-ref ref=\"CONSOLE\"/></root>\n</configuration>",
+      "priority": 4
+    },
+    {
+      "title": "Implement Input Validation and Domain DTO Layer",
+      "description": "Refactor the data flow to introduce a proper validation layer and typed DTOs between the view and the HTTP service. Currently, raw string values flow from Swing text fields through the model directly to HTTP POST with no validation. Standardize the data pipeline by creating a `PersonData` DTO with typed fields (String firstName, String lastName, LocalDate dateOfBirth, GenderOption gender, etc.) and a `PersonDataValidator` that validates required fields, date format, IBAN checksum, and BIC format before sending. This prevents NPE crashes, provides user-facing validation messages, and ensures only valid data reaches the backend. Modularize validation logic so it can be reused across different form entry points.",
+      "example": "// PersonData DTO:\npublic record PersonData(\n    @NotBlank String firstName,\n    @NotBlank String lastName,\n    @NotNull LocalDate dateOfBirth,\n    @NotNull GenderOption gender,\n    String iban,\n    String bic,\n    String street,\n    String zip,\n    String ort,\n    LocalDate validFrom\n) {}\n\n// PersonDataValidator:\npublic class PersonDataValidator {\n    public List<String> validate(PersonData data) {\n        List<String> errors = new ArrayList<>();\n        if (data.firstName() == null || data.firstName().isBlank())\n            errors.add(\"Vorname ist erforderlich\");\n        if (data.iban() != null && !isValidIban(data.iban()))\n            errors.add(\"IBAN hat ungültiges Format\");\n        if (data.dateOfBirth() != null && data.dateOfBirth().isAfter(LocalDate.now()))\n            errors.add(\"Geburtsdatum darf nicht in der Zukunft liegen\");\n        return errors;\n    }\n}\n\n// PocModel.action() with validation:\npublic void action() throws ValidationException {\n    var data = buildPersonData();\n    var errors = validator.validate(data);\n    if (!errors.isEmpty()) throw new ValidationException(errors);\n    var payload = serializer.toMap(data);\n    var response = httpService.post(payload);\n    eventEmitter.emit(response);\n}",
+      "priority": 4
+    },
+    {
+      "title": "Implement WebSocket Client in Java and Remove Unused Tyrus Dependencies",
+      "description": "The pom.xml includes four WebSocket dependencies (Tyrus standalone client, Tyrus core, Tyrus SPI, WebSocket API) but no Java WebSocket client code exists anywhere in the codebase. Orchestrate the integration by either: (a) implementing the planned Java WebSocket client using Tyrus to receive broadcast events from the Node.js server and display them in the Swing UI, or (b) removing all dead WebSocket dependencies if this capability has been de-scoped. If implementing, standardize the WebSocket client as a separate `WebSocketService` class that subscribes to the same EventEmitter pattern, completing the full modernization PoC data flow. This removes dead dependency bloat and clarifies the architecture's intent.",
+      "example": "// WebSocketService using Tyrus:\n@ClientEndpoint\npublic class WebSocketService {\n    private Session session;\n    private final EventEmitter emitter;\n\n    public WebSocketService(EventEmitter emitter) {\n        this.emitter = emitter;\n    }\n\n    public void connect(String serverUri) throws Exception {\n        WebSocketContainer container = ContainerProvider.getWebSocketContainer();\n        container.connectToServer(this, URI.create(serverUri));\n    }\n\n    @OnMessage\n    public void onMessage(String message) {\n        emitter.emit(message);\n    }\n\n    @OnClose\n    public void onClose(Session session, CloseReason reason) {\n        log.info(\"WebSocket closed: {}\", reason.getReasonPhrase());\n    }\n}\n\n// Main.java integration:\nvar wsService = new WebSocketService(eventEmitter);\nwsService.connect(config.getProperty(\"websocket.server.url\"));",
+      "priority": 3
+    }
+  ],
+
+  "technical_debt": [
+    {
+      "debt_type": "Code Debt",
+      "description": "NullPointerException guaranteed in PocModel.action() — all 13 model fields are initialised to null, and line 39 calls .getField().toString() on each without null-checking. This is a crash waiting to happen on any user interaction that triggers submission before all fields are filled.",
+      "impact": "HIGH",
+      "estimated_fix_time": 3.0
+    },
+    {
+      "debt_type": "Code Debt",
+      "description": "MVP pattern is broken: PocPresenter accesses PocView's protected Swing fields directly rather than through a view interface. This violates the MVP contract, tightly couples presenter to Swing, and makes unit testing impossible without instantiating Swing components.",
+      "impact": "HIGH",
+      "estimated_fix_time": 5.0
+    },
+    {
+      "debt_type": "Code Debt",
+      "description": "Three boolean fields (FEMALE, MALE, DIVERSE) in ModelProperties represent a mutually-exclusive categorical choice (gender) as three independent booleans. The API spec types them all as `string`, the Java model stores `ValueModel<Boolean>`, and the serialization converts them to 'true'/'false'/'null' strings. This design is incorrect across all three layers.",
+      "impact": "HIGH",
+      "estimated_fix_time": 4.0
+    },
+    {
+      "debt_type": "Code Debt",
+      "description": "Resource leaks in HttpBinService: JsonGenerator and Scanner are not wrapped in try-with-resources. HttpURLConnection is not disconnected in a finally block. Under error conditions, file descriptors are leaked, eventually exhausting the OS limit.",
+      "impact": "MEDIUM",
+      "estimated_fix_time": 2.0
+    },
+    {
+      "debt_type": "Code Debt",
+      "description": "Debug print statements left in PocPresenter ('I am in insert update', 'I am in remove update') and PocModel (field dump loop). These are development traces that produce noisy console output in all environments including production.",
+      "impact": "LOW",
+      "estimated_fix_time": 0.5
+    },
+    {
+      "debt_type": "Design Debt",
+      "description": "No configuration layer exists. Three separate components (HttpBinService, WebsocketServer.js, Search.vue) each hardcode environment-specific values (URLs, ports). There is no properties file, no environment variable handling, and no separation between configuration and code.",
+      "impact": "HIGH",
+      "estimated_fix_time": 4.0
+    },
+    {
+      "debt_type": "Design Debt",
+      "description": "HttpBinService is instantiated directly inside PocModel with `new HttpBinService()`, making the service a concrete dependency rather than an abstracted interface. There is no dependency injection pattern applied anywhere in the Java codebase.",
+      "impact": "MEDIUM",
+      "estimated_fix_time": 3.0
+    },
+    {
+      "debt_type": "Design Debt",
+      "description": "EventEmitter is not thread-safe (uses ArrayList) and has no unsubscribe mechanism. Given that HTTP responses arrive on background threads and Swing updates must occur on the EDT, the current design is susceptible to ConcurrentModificationException and memory leaks.",
+      "impact": "MEDIUM",
+      "estimated_fix_time": 2.0
+    },
+    {
+      "debt_type": "Design Debt",
+      "description": "ViewData.java is a completely empty class with no fields or methods. It was presumably scaffolded as a placeholder for a view-to-presenter transfer object but never implemented. Dead code increases codebase surface area and misleads developers about intended patterns.",
+      "impact": "LOW",
+      "estimated_fix_time": 0.5
+    },
+    {
+      "debt_type": "Security Debt",
+      "description": "WebsocketServer.js accepts all WebSocket connections from any origin (`request.accept(null, request.origin)`) with no validation, authentication, or rate limiting. Any malicious script on any webpage can connect and inject messages to all connected Swing clients.",
+      "impact": "HIGH",
+      "estimated_fix_time": 3.0
+    },
+    {
+      "debt_type": "Test Debt",
+      "description": "Zero unit tests or integration tests exist across all three modules (Java Swing app, Node.js server, Vue.js client). No test framework dependencies are declared in pom.xml. No Jest configuration exists in the Vue project. There is no CI test step in any workflow configuration.",
+      "impact": "HIGH",
+      "estimated_fix_time": 16.0
+    },
+    {
+      "debt_type": "Documentation Debt",
+      "description": "No Javadoc exists on any public class or method in the Java module. No JSDoc comments in the Node.js server. No component-level documentation in the Vue files. API parameters, return values, and thrown exceptions are entirely undocumented.",
+      "impact": "MEDIUM",
+      "estimated_fix_time": 6.0
+    },
+    {
+      "debt_type": "Infrastructure Debt",
+      "description": "pom.xml has no main-class manifest configuration, no assembly/shade plugin, and no executable JAR configuration. The project cannot be distributed as a runnable artifact. Additionally, dead Tyrus WebSocket dependencies inflate the dependency graph with components that have no corresponding usage.",
+      "impact": "MEDIUM",
+      "estimated_fix_time": 2.0
+    },
+    {
+      "debt_type": "Infrastructure Debt",
+      "description": "No linting or code quality tooling is configured for any of the three modules: no Checkstyle/SpotBugs for Java, no ESLint for JavaScript/Vue, no YAML linting for the OpenAPI spec. Code style inconsistencies (mix of var/const in JS, inconsistent German/English naming) will compound as the codebase grows.",
+      "impact": "LOW",
+      "estimated_fix_time": 3.0
+    }
+  ],
+
+  "quality_dimensions_summary": {
+    "maintainability": {
+      "score": 3.5,
+      "key_findings": [
+        "Hardcoded URLs in 3 places prevent environment-independent deployment",
+        "Broken MVP encapsulation through direct field access forces presenter-view coupling",
+        "Public model field in PocModel allows arbitrary external mutation",
+        "Dead code (ViewData, CountDownLatch, messages array) adds confusion"
+      ]
+    },
+    "reliability": {
+      "score": 3.0,
+      "key_findings": [
+        "Guaranteed NPE in PocModel.action() when any field is null",
+        "No HTTP error response handling — 4xx/5xx silently treated as success",
+        "WebSocket send errors not caught — one bad client disrupts all broadcasts",
+        "Swing EDT violations possible — event emissions not dispatched via invokeLater"
+      ]
+    },
+    "security": {
+      "score": 3.0,
+      "key_findings": [
+        "WebSocket server accepts all origins — CSWSH vulnerability",
+        "No authentication on WebSocket server",
+        "No API authentication defined in OpenAPI spec",
+        "Mock data contains real-format IBAN/BIC numbers in source code"
+      ]
+    },
+    "testability": {
+      "score": 2.0,
+      "key_findings": [
+        "Zero tests across all modules",
+        "No test framework dependencies declared in pom.xml",
+        "PocModel tightly couples to HttpBinService — cannot test without network",
+        "PocPresenter tightly couples to Swing — cannot test without UI instantiation"
+      ]
+    },
+    "readability": {
+      "score": 5.5,
+      "key_findings": [
+        "Debug println statements throughout codebase",
+        "Ambiguous labels (RT in PocView)",
+        "Mixed German/English in variable names and labels",
+        "Unnamed variable discard pattern (`var _`) may confuse developers unfamiliar with Java 21+"
+      ]
+    },
+    "performance": {
+      "score": 5.0,
+      "key_findings": [
+        "WebSocket textarea watch fires on every keystroke — no debouncing",
+        "EventEmitter uses non-thread-safe ArrayList",
+        "Unbounded messages array in Node.js server grows without limit",
+        "Legacy HttpURLConnection instead of HttpClient with connection pooling"
+      ]
+    }
+  }
+}
